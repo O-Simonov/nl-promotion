@@ -5,6 +5,9 @@ tg-bot/sent/
 vk-bot/config.json
 vk-bot/logs/
 vk-bot/sent/
+smm-bot/config.json
+smm-bot/logs/
+smm-bot/sent/
 
 # Локальные настройки харнесса Claude Code
 .claude/
