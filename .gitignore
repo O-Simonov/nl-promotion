@@ -1,0 +1,11 @@
+# 🔒 Секреты — НЕ коммитить!
+tg-bot/config.json
+tg-bot/logs/
+tg-bot/sent/
+
+# Локальные настройки харнесса Claude Code
+.claude/
+
+# Временные файлы
+*.tmp
+foto_rot.jpg
