@@ -2,6 +2,9 @@
 tg-bot/config.json
 tg-bot/logs/
 tg-bot/sent/
+vk-bot/config.json
+vk-bot/logs/
+vk-bot/sent/
 
 # Локальные настройки харнесса Claude Code
 .claude/
