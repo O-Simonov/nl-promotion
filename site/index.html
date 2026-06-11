@@ -151,6 +151,52 @@
     .fb { background: #1877F2; }
     .mx { background: #6C5CE7; font-size: 13px; }
 
+    /* Каталог продуктов */
+    .products {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .product {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 14px 10px 12px;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--ink);
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .product:hover {
+      transform: translateY(-2px);
+      border-color: var(--green-2);
+      background: #f1fdfa;
+    }
+    .p-emoji { font-size: 32px; line-height: 1; margin-bottom: 6px; }
+    .p-name {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .p-desc {
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+    .p-price {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--green-1);
+    }
+    @media (max-width: 360px) {
+      .products { grid-template-columns: 1fr; }
+    }
+
     footer {
       margin-top: 22px;
       color: rgba(255,255,255,0.85);
@@ -189,6 +235,41 @@
         <span class="txt">Регистрация в 1 линию<small>Стать партнёром в моей команде</small></span>
         <span class="arrow">→</span>
       </a>
+
+      <!-- КАТАЛОГ ПРОДУКТОВ -->
+      <div class="section-label">Что покупают чаще всего</div>
+      <div class="products">
+        <a class="product" href="https://nlstar.com/ref/WEWxBD/" target="_blank" rel="noopener">
+          <div class="p-emoji">🥤</div>
+          <div class="p-name">Energy Diet Smart</div>
+          <div class="p-desc">Коктейль для контроля веса.<br/>25+ вкусов. 1 порция = 146 ₽</div>
+          <div class="p-price">от 2 050 ₽</div>
+        </a>
+        <a class="product" href="https://nlstar.com/ref/WEWxBD/" target="_blank" rel="noopener">
+          <div class="p-emoji">🍲</div>
+          <div class="p-name">Супы и каши ED</div>
+          <div class="p-desc">Горячее питание за 1 минуту.<br/>Курица, грибы, сыр, гречка</div>
+          <div class="p-price">от 2 050 ₽</div>
+        </a>
+        <a class="product" href="https://nlstar.com/ref/WEWxBD/" target="_blank" rel="noopener">
+          <div class="p-emoji">💄</div>
+          <div class="p-name">Be Loved косметика</div>
+          <div class="p-desc">Корейский уход.<br/>Сыворотки, пенки, кремы</div>
+          <div class="p-price">от 1 200 ₽</div>
+        </a>
+        <a class="product" href="https://nlstar.com/ref/WEWxBD/" target="_blank" rel="noopener">
+          <div class="p-emoji">🧴</div>
+          <div class="p-name">Эко-средства для дома</div>
+          <div class="p-desc">Концентраты без фосфатов.<br/>Экономия до 30% в месяц</div>
+          <div class="p-price">от 590 ₽</div>
+        </a>
+        <a class="product" href="https://nlstar.com/ref/WEWxBD/" target="_blank" rel="noopener">
+          <div class="p-emoji">🎁</div>
+          <div class="p-name">Стартовый набор</div>
+          <div class="p-desc">Попробуй 3–5 продуктов<br/>по специальной цене</div>
+          <div class="p-price">от 1 500 ₽</div>
+        </a>
+      </div>
 
       <!-- СОЦСЕТИ -->
       <div class="section-label">Я в соцсетях</div>
