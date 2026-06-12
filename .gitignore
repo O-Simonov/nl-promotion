@@ -1,15 +1,20 @@
-# 🔒 Секреты — НЕ коммитить!
+# Конфиги с токенами — не коммитить (используй config.example.json)
 tg-bot/config.json
+vk-bot/config.json
+ig-bot/config.json
+fb-bot/config.json
+
+# Логи и отправленные посты
 tg-bot/logs/
 tg-bot/sent/
-vk-bot/config.json
 vk-bot/logs/
 vk-bot/sent/
-smm-bot/config.json
-smm-bot/logs/
-smm-bot/sent/
+ig-bot/logs/
+ig-bot/sent/
+fb-bot/logs/
+fb-bot/sent/
 
-# Локальные настройки харнесса Claude Code
+# Локальные настройки IDE
 .claude/
 
 # Временные файлы
