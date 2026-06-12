@@ -18,8 +18,8 @@ function Write-Log($msg) {
 $queueCount = (Get-ChildItem -Path $queueDir -Filter '*.txt' -File).Count
 Write-Log "Постов в очереди: $queueCount"
 
-# Порог: 6 постов = ~2 дня (3 бота × 2 дня = 6)
-if ($queueCount -gt 6) {
+# Порог: 8 постов = ~2 дня (4 бота × 2 дня = 8)
+if ($queueCount -gt 8) {
     Write-Log "Очередь достаточная — пополнение не нужно."
     exit 0
 }
