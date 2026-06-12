@@ -14,8 +14,8 @@ ig-bot/sent/
 fb-bot/logs/
 fb-bot/sent/
 
-# Локальные настройки IDE
-.claude/
+# Локальные настройки Claude Code (не трогать skills/)
+.claude/settings.local.json
 
 # Временные файлы
 *.tmp
