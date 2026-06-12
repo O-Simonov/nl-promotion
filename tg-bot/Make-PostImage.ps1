@@ -6,7 +6,8 @@
 param(
     [Parameter(Mandatory = $true)][string]$Title,
     [Parameter(Mandatory = $false)][string]$Subtitle = "",
-    [ValidateSet("product", "business", "review", "offer", "news")]
+    [ValidateSet("product", "business", "review", "offer", "news",
+                 "slimming", "hair", "skincare", "body", "mens", "kids", "teeth")]
     [string]$Category = "product",
     [Parameter(Mandatory = $true)][string]$Out
 )
@@ -17,11 +18,18 @@ $W = 1080
 $H = 1080
 
 $palettes = @{
-    product  = @{ bg1 = "#0f766e"; bg2 = "#15a08c"; accent = "#16a34a"; emoji = "🥤" }
-    business = @{ bg1 = "#1e3a8a"; bg2 = "#3b82f6"; accent = "#60a5fa"; emoji = "🚀" }
-    review   = @{ bg1 = "#c2410c"; bg2 = "#f97316"; accent = "#fdba74"; emoji = "💬" }
-    offer    = @{ bg1 = "#9f1239"; bg2 = "#e11d48"; accent = "#fda4af"; emoji = "📢" }
-    news     = @{ bg1 = "#0b3d3a"; bg2 = "#0f766e"; accent = "#5eead4"; emoji = "🆕" }
+    product  = @{ bg1 = "#0f766e"; bg2 = "#15a08c"; emoji = "🥤" }
+    business = @{ bg1 = "#1e3a8a"; bg2 = "#3b82f6"; emoji = "🚀" }
+    review   = @{ bg1 = "#c2410c"; bg2 = "#f97316"; emoji = "💬" }
+    offer    = @{ bg1 = "#9f1239"; bg2 = "#e11d48"; emoji = "📢" }
+    news     = @{ bg1 = "#0b3d3a"; bg2 = "#0f766e"; emoji = "🆕" }
+    slimming = @{ bg1 = "#7c2d12"; bg2 = "#ea580c"; emoji = "🔥" }
+    hair     = @{ bg1 = "#4a1d96"; bg2 = "#7c3aed"; emoji = "💇" }
+    skincare = @{ bg1 = "#831843"; bg2 = "#db2777"; emoji = "✨" }
+    body     = @{ bg1 = "#14532d"; bg2 = "#16a34a"; emoji = "🧴" }
+    mens     = @{ bg1 = "#1e3a5f"; bg2 = "#1d4ed8"; emoji = "🧔" }
+    kids     = @{ bg1 = "#78350f"; bg2 = "#d97706"; emoji = "🌟" }
+    teeth    = @{ bg1 = "#164e63"; bg2 = "#0891b2"; emoji = "🦷" }
 }
 $p = $palettes[$Category]
 
