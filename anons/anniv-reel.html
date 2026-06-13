@@ -26,14 +26,14 @@
     background:linear-gradient(165deg,#f4d999,#e3b873 45%,#c9974f);-webkit-background-clip:text;background-clip:text;color:transparent;
     filter:drop-shadow(0 18px 50px rgba(227,184,115,0.32));}
   #let{top:1130px;font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:128px;color:#f4efe4;}
-  #sub{top:1340px;font-size:54px;font-weight:800;}
+  #sub{top:1330px;font-size:52px;font-weight:800;}
   #sub b{color:#37dca0;}
-  #tag{top:1450px;font-size:36px;font-weight:500;color:#9db5a8;}
-  #cta{top:1560px;display:flex;justify-content:center;}
-  #cta span{display:inline-flex;align-items:center;gap:16px;padding:24px 50px;border-radius:999px;
-    background:linear-gradient(135deg,#e3b873,#c9974f);color:#2a1c06;font-size:42px;font-weight:800;
-    box-shadow:0 18px 44px rgba(227,184,115,0.3);}
-  #foot{top:1760px;font-size:34px;font-weight:700;color:rgba(157,181,168,0.92);}
+  #tag{top:1440px;font-size:35px;font-weight:500;color:#9db5a8;}
+  #link{top:1560px;display:flex;justify-content:center;}
+  #link span{display:inline-flex;align-items:center;gap:16px;padding:24px 54px;border-radius:999px;
+    background:linear-gradient(135deg,#e3b873,#c9974f);color:#2a1c06;font-size:46px;font-weight:800;
+    box-shadow:0 18px 44px rgba(227,184,115,0.34);will-change:transform;}
+  #foot{top:1740px;font-size:34px;font-weight:700;color:rgba(157,181,168,0.92);}
   #foot b{color:#e3b873;}
 </style>
 </head>
@@ -47,17 +47,19 @@
     <div class="layer" id="let">лет вместе</div>
     <div class="layer" id="sub">С <b>юбилеем</b>, любимая компания!</div>
     <div class="layer" id="tag">Юбилейный форум NL25 · 13 июня</div>
-    <div class="layer" id="cta"><span>▶ Смотри, как это было</span></div>
+    <div class="layer" id="link"><span>🔗 oleg-nl.netlify.app</span></div>
     <div class="layer" id="foot">Олег Симонов · <b>@Simka1969_nl</b></div>
   </div>
 
 <script>
-  // ---- утилиты анимации ----
+  const TOTAL = 12; // секунд
+
   const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
-  const seg=(t,a,b)=>clamp((t-a)/(b-a));
+  const seg=(T,a,b)=>clamp((T-a)/(b-a));
   const easeOut=x=>1-Math.pow(1-x,3);
   const backOut=x=>{const c=1.70158,c3=c+1;return 1+c3*Math.pow(x-1,3)+c*Math.pow(x-1,2);};
   const lerp=(a,b,p)=>a+(b-a)*p;
+  function set(id,op,ty){const e=document.getElementById(id);e.style.opacity=op;e.style.transform='translateY('+ty+'px)';}
 
   // ---- конфетти ----
   const colors=['#e3b873','#37dca0','#f4d999','#c9974f'];
@@ -73,71 +75,62 @@
     else{el.style.background=colors[i%colors.length];}
     cont.appendChild(el);
     pieces.push({el,x:Math.random()*1080,y:-100+Math.random()*2000,
-      vy:160+Math.random()*240, sway:30+Math.random()*60, phase:Math.random()*6.28, delay:Math.random()*0.25});
+      vy:120+Math.random()*200, sway:30+Math.random()*60, phase:Math.random()*6.28, delay:Math.random()*0.3});
   }
 
-  // ---- установка одного кадра по t (0..1) ----
+  // ---- один кадр по t (0..1); тайминги заданы в СЕКУНДАХ от TOTAL ----
   function renderFrame(t){
-    // kicker
-    let p=easeOut(seg(t,0.02,0.14));
-    set('kicker', p, lerp(-30,0,p));
-    // avatar (pop с овершутом)
-    p=seg(t,0.06,0.2);
+    const T = t*TOTAL;
+    let p;
+    p=easeOut(seg(T,0.1,0.9));   set('kicker',p,lerp(-30,0,p));
+    // avatar
+    p=seg(T,0.4,1.5);
     document.getElementById('avatarWrap').style.opacity=clamp(p*1.4);
     document.getElementById('avatar').style.transform='scale('+lerp(0.5,1,backOut(p))+')';
     // 25
-    p=seg(t,0.16,0.4);
+    p=seg(T,0.9,2.5);
     const numEl=document.getElementById('num');
     numEl.style.opacity=clamp(p*1.5);
     numEl.style.transform='scale('+lerp(0.2,1,backOut(p))+')';
     // лет вместе
-    p=easeOut(seg(t,0.4,0.54));
-    set('let',p,lerp(40,0,p));
+    p=easeOut(seg(T,2.4,3.3));  set('let',p,lerp(40,0,p));
     // sub
-    p=easeOut(seg(t,0.54,0.68));
-    set('sub',p,lerp(34,0,p));
+    p=easeOut(seg(T,3.3,4.2));  set('sub',p,lerp(34,0,p));
     // tag
-    p=easeOut(seg(t,0.62,0.74));
-    set('tag',p,lerp(28,0,p));
-    // cta (pop)
-    p=seg(t,0.68,0.82);
-    const cta=document.getElementById('cta');
-    cta.style.opacity=clamp(p*1.5);
-    cta.firstElementChild.style.transform='scale('+lerp(0.7,1,backOut(p))+')';
+    p=easeOut(seg(T,4.1,5.0));  set('tag',p,lerp(28,0,p));
+    // ссылка (поп + лёгкое «дыхание» на удержании)
+    p=seg(T,5.0,6.0);
+    const link=document.getElementById('link');
+    link.style.opacity=clamp(p*1.5);
+    const linkInner=link.firstElementChild;
+    if(T<=6.0){ linkInner.style.transform='scale('+lerp(0.7,1,backOut(p))+')'; }
+    else { linkInner.style.transform='scale('+(1+0.035*Math.sin((T-6.0)*2.3))+')'; }
     // foot
-    p=easeOut(seg(t,0.74,0.86));
-    set('foot',p,lerp(24,0,p));
-    // конфетти (падают и качаются; появляются после своего delay)
-    const T=t*7; // секунды
+    p=easeOut(seg(T,5.9,6.8));   set('foot',p,lerp(24,0,p));
+    // конфетти
     for(const pc of pieces){
-      const local=Math.max(0,T-pc.delay*7);
+      const local=Math.max(0,T-pc.delay*TOTAL);
       const y=((pc.y+local*pc.vy)%2100+2100)%2100-100;
-      const x=pc.x+Math.sin(pc.phase+local*1.6)*pc.sway;
-      pc.el.style.transform='translate('+x+'px,'+y+'px) rotate('+(local*120+pc.phase*40)+'deg)';
-      pc.el.style.opacity=clamp(seg(t,0.05,0.18))* (y>-50&&y<1980?0.9:0);
+      const x=pc.x+Math.sin(pc.phase+local*1.5)*pc.sway;
+      pc.el.style.transform='translate('+x+'px,'+y+'px) rotate('+(local*110+pc.phase*40)+'deg)';
+      pc.el.style.opacity=clamp(seg(T,0.1,0.5))*((y>-50&&y<1980)?0.9:0);
     }
   }
-  function set(id,op,ty){const e=document.getElementById(id);e.style.opacity=op;e.style.transform='translateY('+ty+'px)';}
-
   window.renderFrame=renderFrame;
 
-  // ---- авто-проигрывание (если не режим захвата ?capture=1) ----
+  // ---- авто-проигрывание, если не ?capture=1 ----
   const capture=new URLSearchParams(location.search).get('capture');
   if(!capture){
-    const DUR=7000, HOLD=1500;
+    const DUR=TOTAL*1000, HOLD=900;
     let start=null;
     function loop(ts){
       if(start===null)start=ts;
-      const el=(ts-start);
-      const cycle=DUR+HOLD;
-      const m=el%cycle;
+      const m=(ts-start)%(DUR+HOLD);
       renderFrame(Math.min(1,m/DUR));
       requestAnimationFrame(loop);
     }
     requestAnimationFrame(loop);
-  } else {
-    renderFrame(0);
-  }
+  } else { renderFrame(0); }
 </script>
 </body>
 </html>
