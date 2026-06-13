@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NL International — продукты и бизнес · Олег Симонов</title>
+  <meta name="description" content="Презентация о компании NL International: продукты для здоровья, косметика, эко-быт и бизнес-возможность. Олег Симонов — независимый партнёр NL." />
+  <meta property="og:title" content="NL International — продукты и бизнес" />
+  <meta property="og:description" content="Функциональное питание, косметика, безопасный быт и возможность своего дела с NL. Презентация Олега Симонова." />
+  <meta property="og:type" content="website" />
+
+  <!-- Шрифты с поддержкой кириллицы:
+       Playfair Display — display-серив (фирменный, как на сайте-хабе)
+       Manrope — чистый гротеск для основного текста -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===========================================
+       ТЕМА (CSS-переменные)
+       Меняешь здесь — меняется весь вид презентации.
+       Эстетика: глубокий «изумрудный ботанический» —
+       премиально, природно, доверительно (под бренд NL).
+       =========================================== */
+    :root {
+      --bg-0:        #061310;   /* самый тёмный фон сцены */
+      --bg-1:        #0a201a;   /* фон карточек/панелей */
+      --bg-2:        #0e2a22;   /* чуть светлее карточки */
+      --ink:         #f4efe4;   /* тёплый белый — основной текст */
+      --muted:       #9db5a8;   /* приглушённый шалфейный */
+      --emerald:     #37dca0;   /* свежий изумрудный акцент */
+      --emerald-dim: #0f766e;   /* глубокий изумруд */
+      --gold:        #e3b873;   /* тёплое золото — премиум-акцент */
+      --line:        rgba(244, 239, 228, 0.12);
+      --card-line:   rgba(55, 220, 160, 0.18);
+
+      --stage-bg:    #04100c;   /* леттербокс-поля вокруг сцены */
+      --slide-bg:    var(--bg-0);
+
+      /* Типографика — в координатах сцены 1920×1080 */
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'Manrope', -apple-system, sans-serif;
+
+      /* Анимация */
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --dur: 0.7s;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* === viewport-base.css (вставлен полностью, как требует скилл) === */
+    html, body {
+      width: 100%; height: 100%; margin: 0;
+      overflow: hidden;
+      background: var(--stage-bg, #000);
+      font-family: var(--font-body);
+    }
+    .deck-viewport {
+      position: fixed; inset: 0;
+      overflow: hidden;
+      background: var(--stage-bg, #000);
+    }
+    .deck-stage {
+      position: absolute; left: 0; top: 0;
+      width: 1920px; height: 1080px;
+      overflow: hidden;
+      transform-origin: 0 0;
+      background: var(--slide-bg, #fff);
+    }
+    .slide {
+      position: absolute; inset: 0;
+      width: 1920px; height: 1080px;
+      overflow: hidden;
+      display: block;
+      visibility: hidden; opacity: 0; pointer-events: none;
+      background: var(--slide-bg, #fff);
+    }
+    .slide.active, .slide.visible {
+      visibility: visible; opacity: 1; pointer-events: auto; z-index: 1;
+    }
+    img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+    .deck-controls {
+      position: fixed; left: 50%; bottom: 22px;
+      transform: translateX(-50%); z-index: 1000;
+    }
+    @media print {
+      html, body { width: 1920px; height: auto; overflow: visible; background: #fff; }
+      .deck-viewport { position: static; overflow: visible; background: #fff; }
+      .deck-stage { position: static; width: auto; height: auto; transform: none !important; background: none; }
+      .slide {
+        position: relative; display: block !important;
+        visibility: visible !important; opacity: 1 !important; pointer-events: auto !important;
+        width: 1920px; height: 1080px; break-after: page; page-break-after: always;
+      }
+      .slide:last-child { break-after: auto; page-break-after: auto; }
+      .deck-controls, .progress-bar, .edit-hint { display: none !important; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+      }
+    }
+    /* === конец viewport-base.css === */
+
+    /* ===========================================
+       ОБЩАЯ АТМОСФЕРА СЛАЙДА
+       Слоистые радиальные градиенты + зерно создают глубину
+       вместо плоской заливки.
+       =========================================== */
+    .slide {
+      color: var(--ink);
+      background:
+        radial-gradient(1100px 760px at 82% -8%, rgba(55,220,160,0.16), transparent 60%),
+        radial-gradient(900px 700px at 6% 108%, rgba(227,184,115,0.10), transparent 58%),
+        linear-gradient(160deg, #08201a 0%, #061511 55%, #040d0a 100%);
+    }
+    /* Тонкое зерно поверх фона (inline SVG-фильтр ниже) */
+    .grain {
+      position: absolute; inset: 0;
+      opacity: 0.05; pointer-events: none;
+      mix-blend-mode: overlay; z-index: 0;
+    }
+    /* Декоративная «ботаническая» дуга в углу — лёгкий фирменный штрих */
+    .slide::after {
+      content: '';
+      position: absolute;
+      right: -220px; bottom: -260px;
+      width: 720px; height: 720px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(55,220,160,0.14);
+      box-shadow: inset 0 0 120px rgba(55,220,160,0.06);
+      pointer-events: none;
+    }
+
+    .slide-content {
+      position: relative; z-index: 1;
+      width: 100%; height: 100%;
+      padding: 104px 132px;
+      display: flex; flex-direction: column;
+    }
+
+    /* ===========================================
+       ТИПОГРАФИКА И ОБЩИЕ ЭЛЕМЕНТЫ
+       =========================================== */
+    .kicker {
+      font-family: var(--font-body);
+      font-size: 22px; font-weight: 700;
+      letter-spacing: 4px; text-transform: uppercase;
+      color: var(--emerald);
+      display: flex; align-items: center; gap: 18px;
+    }
+    .kicker::before {
+      content: ''; width: 56px; height: 2px;
+      background: linear-gradient(90deg, var(--emerald), transparent);
+    }
+
+    h2.title {
+      font-family: var(--font-display);
+      font-weight: 800; font-size: 88px; line-height: 1.04;
+      margin: 26px 0 18px; letter-spacing: 0.5px;
+    }
+    h2.title .accent { color: var(--gold); font-style: italic; font-weight: 700; }
+
+    .lead {
+      font-size: 31px; line-height: 1.5; color: var(--muted);
+      max-width: 1180px; font-weight: 500;
+    }
+
+    /* Маркированные пункты с галочкой-акцентом */
+    .points { list-style: none; margin-top: 40px; display: flex; flex-direction: column; gap: 24px; }
+    .points li {
+      display: flex; align-items: flex-start; gap: 22px;
+      font-size: 30px; line-height: 1.4; font-weight: 500;
+    }
+    .points li .mark {
+      flex-shrink: 0; margin-top: 4px;
+      width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(55,220,160,0.14);
+      border: 1px solid var(--card-line);
+      color: var(--emerald); font-size: 22px; font-weight: 800;
+    }
+    .points li b { color: var(--ink); font-weight: 800; }
+    .points li .dim { color: var(--muted); }
+
+    /* Бейдж-чип (цена / факт) */
+    .chip {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, var(--emerald-dim), var(--emerald));
+      color: #04130d; font-weight: 800; font-size: 26px;
+      padding: 14px 26px; border-radius: 999px;
+      text-decoration: none;
+      box-shadow: 0 14px 34px rgba(55,220,160,0.22);
+      transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+    }
+    a.chip:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(55,220,160,0.32); }
+
+    /* ===========================================
+       АНИМАЦИЯ ПОЯВЛЕНИЯ (.reveal на активном слайде)
+       =========================================== */
+    .reveal {
+      opacity: 0; transform: translateY(34px);
+      transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+    }
+    .slide.visible .reveal { opacity: 1; transform: translateY(0); }
+    .slide.visible .reveal:nth-child(1) { transition-delay: 0.05s; }
+    .slide.visible .reveal:nth-child(2) { transition-delay: 0.15s; }
+    .slide.visible .reveal:nth-child(3) { transition-delay: 0.25s; }
+    .slide.visible .reveal:nth-child(4) { transition-delay: 0.35s; }
+    .slide.visible .reveal:nth-child(5) { transition-delay: 0.45s; }
+    .slide.visible .reveal:nth-child(6) { transition-delay: 0.55s; }
+    /* Поэлементная задержка через CSS-переменную для сеток */
+    .stagger { opacity: 0; transform: translateY(34px) scale(0.985);
+      transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+      transition-delay: calc(var(--i, 0) * 0.08s + 0.15s); }
+    .slide.visible .stagger { opacity: 1; transform: translateY(0) scale(1); }
+
+    /* ===========================================
+       ТИТУЛЬНЫЙ СЛАЙД
+       =========================================== */
+    .title-slide .slide-content {
+      align-items: center; justify-content: center; text-align: center;
+      padding: 80px;
+    }
+    .avatar-ring {
+      width: 200px; height: 200px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--emerald-dim), var(--emerald) 55%, var(--gold));
+      padding: 4px; margin-bottom: 34px;
+      box-shadow: 0 20px 60px rgba(55,220,160,0.30);
+    }
+    .avatar-ring img {
+      width: 100%; height: 100%; border-radius: 50%;
+      object-fit: cover; border: 4px solid #061511; display: block;
+    }
+    .title-slide h1 {
+      font-family: var(--font-display); font-weight: 900;
+      font-size: 132px; line-height: 1; letter-spacing: 1px;
+    }
+    .title-slide .role {
+      font-size: 30px; font-weight: 600; color: var(--emerald);
+      letter-spacing: 1px; margin-top: 14px;
+    }
+    .title-slide .tag {
+      font-size: 28px; color: var(--muted); margin-top: 22px;
+      max-width: 980px; line-height: 1.5;
+    }
+    .anniversary {
+      display: inline-flex; align-items: center; gap: 14px;
+      margin-bottom: 30px; padding: 10px 24px; border-radius: 999px;
+      border: 1px solid var(--card-line); background: rgba(55,220,160,0.07);
+      font-size: 22px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--gold);
+    }
+    .anniversary .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--emerald);
+      box-shadow: 0 0 0 5px rgba(55,220,160,0.18); }
+    .scroll-hint {
+      position: absolute; bottom: 64px; left: 50%; transform: translateX(-50%);
+      font-size: 20px; color: var(--muted); letter-spacing: 1px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .scroll-hint .arr { animation: bob 1.8s var(--ease) infinite; }
+    @keyframes bob { 0%,100%{ transform: translateX(0);} 50%{ transform: translateX(8px);} }
+
+    /* ===========================================
+       КАРТОЧНЫЕ СЕТКИ
+       =========================================== */
+    .grid { display: grid; gap: 22px; margin-top: 46px; }
+    .grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .card {
+      background: linear-gradient(165deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+      border: 1px solid var(--line);
+      border-radius: 22px; padding: 30px 30px 28px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .card .ico { font-size: 46px; line-height: 1; }
+    .card h3 { font-size: 28px; font-weight: 800; color: var(--ink); }
+    .card p { font-size: 21px; line-height: 1.45; color: var(--muted); font-weight: 500; }
+    .card.glow { border-color: var(--card-line); box-shadow: 0 0 0 1px rgba(55,220,160,0.05), 0 24px 50px rgba(0,0,0,0.32); }
+
+    /* Компактные продуктовые плитки */
+    .grid.products .card { padding: 24px; gap: 8px; }
+    .grid.products .ico { font-size: 40px; }
+    .grid.products h3 { font-size: 23px; }
+    .grid.products p { font-size: 18px; }
+
+    /* ===========================================
+       КРУПНЫЕ ЧИСЛА / СТАТИСТИКА
+       =========================================== */
+    .stats { display: flex; gap: 30px; margin-top: 56px; }
+    .stat {
+      flex: 1; background: rgba(255,255,255,0.035);
+      border: 1px solid var(--line); border-radius: 22px;
+      padding: 34px 30px; text-align: left;
+    }
+    .stat .num { font-family: var(--font-display); font-weight: 800;
+      font-size: 66px; line-height: 1; color: var(--emerald); }
+    .stat .lbl { font-size: 22px; color: var(--muted); margin-top: 12px; font-weight: 500; }
+
+    /* Шаги «1-2-3» */
+    .steps { display: flex; gap: 26px; margin-top: 54px; }
+    .step {
+      flex: 1; background: rgba(255,255,255,0.035);
+      border: 1px solid var(--line); border-radius: 22px; padding: 36px 32px;
+      position: relative;
+    }
+    .step .n {
+      font-family: var(--font-display); font-weight: 900; font-size: 88px;
+      line-height: 0.9; color: rgba(55,220,160,0.28); margin-bottom: 16px;
+    }
+    .step h3 { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+    .step p { font-size: 21px; line-height: 1.45; color: var(--muted); font-weight: 500; }
+
+    /* ===========================================
+       СЛАЙД-ЗАЯВЛЕНИЕ (большая цитата)
+       =========================================== */
+    .statement .slide-content { justify-content: center; }
+    .statement .big {
+      font-family: var(--font-display); font-weight: 800; font-style: italic;
+      font-size: 76px; line-height: 1.18; max-width: 1500px;
+    }
+    .statement .big .hl { color: var(--gold); }
+    .statement .sub { font-size: 28px; color: var(--muted); margin-top: 34px; max-width: 1200px; line-height: 1.5; font-weight: 500; }
+
+    /* ===========================================
+       КОНТАКТЫ И CTA
+       =========================================== */
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 44px; max-width: 1300px; }
+    .contact {
+      display: flex; align-items: center; gap: 18px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--line);
+      border-radius: 18px; padding: 20px 26px; text-decoration: none; color: var(--ink);
+      transition: border-color 0.2s, transform 0.2s, background 0.2s;
+    }
+    .contact:hover { border-color: var(--card-line); transform: translateY(-2px); background: rgba(55,220,160,0.06); }
+    .contact .badge {
+      width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 22px; color: #fff;
+    }
+    .contact .who { font-size: 24px; font-weight: 700; }
+    .contact .handle { font-size: 19px; color: var(--muted); }
+    .b-tg{background:#229ED9;} .b-vk{background:#0077FF;}
+    .b-ig{background:radial-gradient(circle at 30% 107%,#fdf497,#fd5949 45%,#d6249f 60%,#285AEB 90%);}
+    .b-ok{background:#EE8208;} .b-fb{background:#1877F2;} .b-mx{background:#6C5CE7;font-size:15px;}
+    .b-nl{background:linear-gradient(135deg,var(--emerald-dim),var(--emerald));color:#04130d;}
+
+    .cta-buttons { display: flex; flex-direction: column; gap: 18px; margin-top: 44px; max-width: 980px; }
+    .cta {
+      display: flex; align-items: center; gap: 20px;
+      padding: 26px 32px; border-radius: 18px; text-decoration: none;
+      font-size: 28px; font-weight: 700; transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .cta .ico { font-size: 34px; }
+    .cta .arr { margin-left: auto; opacity: 0.6; }
+    .cta:hover { transform: translateY(-2px); }
+    .cta-primary { background: linear-gradient(135deg, var(--emerald), var(--emerald-dim)); color: #04130d;
+      box-shadow: 0 16px 38px rgba(55,220,160,0.28); }
+    .cta-primary .sub { display: block; font-size: 18px; font-weight: 600; opacity: 0.78; }
+    .cta-gold { background: linear-gradient(135deg, var(--gold), #c9974f); color: #2a1c06;
+      box-shadow: 0 16px 38px rgba(227,184,115,0.26); }
+    .cta-gold .sub { display: block; font-size: 18px; font-weight: 600; opacity: 0.78; }
+    .cta-ghost { background: rgba(255,255,255,0.05); border: 1px solid var(--card-line); color: var(--ink); }
+    .cta-ghost .sub { display: block; font-size: 18px; font-weight: 500; color: var(--muted); }
+
+    .closing .slide-content { align-items: center; justify-content: center; text-align: center; }
+    .closing h2 {
+      font-family: var(--font-display); font-weight: 900; font-size: 110px; line-height: 1.02;
+      margin-bottom: 16px;
+    }
+    .closing h2 .accent { color: var(--gold); font-style: italic; }
+    .closing .url {
+      display: inline-block; margin-top: 38px; font-size: 30px; font-weight: 700;
+      color: var(--emerald); letter-spacing: 1px; text-decoration: none;
+      border-bottom: 2px solid transparent; transition: border-color 0.2s, color 0.2s;
+    }
+    .closing a.url:hover { color: #5ef0bb; border-bottom-color: var(--emerald); }
+
+    /* Юридическая сноска мелким шрифтом */
+    .legal { position: absolute; bottom: 40px; left: 132px; right: 132px;
+      font-size: 16px; color: rgba(157,181,168,0.6); z-index: 1; }
+
+    /* ===========================================
+       ХРОМ ПРЕЗЕНТАЦИИ (вне дизайна слайда)
+       =========================================== */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 4px; width: 0%;
+      background: linear-gradient(90deg, var(--emerald), var(--gold));
+      z-index: 1001; transition: width 0.4s var(--ease);
+    }
+    .deck-controls {
+      display: flex; align-items: center; gap: 16px;
+      background: rgba(6,19,16,0.7); backdrop-filter: blur(8px);
+      border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px;
+    }
+    .deck-controls button {
+      width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+      background: rgba(255,255,255,0.06); color: var(--ink); font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .deck-controls button:hover { background: rgba(55,220,160,0.18); }
+    .deck-controls .counter { font-size: 18px; color: var(--muted); font-weight: 600;
+      min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+
+  <!-- SVG-фильтр зерна (используется во всех слайдах) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="grainf"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter>
+  </svg>
+
+  <div class="progress-bar" id="progressBar"></div>
+
+  <div class="deck-viewport">
+    <main class="deck-stage" id="deckStage">
+
+      <!-- ===================== СЛАЙД 1 — ТИТУЛ ===================== -->
+      <section class="slide title-slide active">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="anniversary reveal"><span class="dot"></span>NL International · более 25 лет</div>
+          <div class="avatar-ring reveal"><img src="foto.jpg" alt="Олег Симонов" /></div>
+          <h1 class="reveal">Олег Симонов</h1>
+          <div class="role reveal">Независимый партнёр NL International</div>
+          <p class="tag reveal">Качественные продукты для здоровья, красоты и дома —<br/>и возможность построить своё дело</p>
+        </div>
+        <div class="scroll-hint">листайте: стрелки · пробел · свайп <span class="arr">→</span></div>
+      </section>
+
+      <!-- ===================== СЛАЙД 2 — О КОМПАНИИ ===================== -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">О компании</div>
+          <h2 class="title reveal">Что такое <span class="accent">NL International</span></h2>
+          <p class="lead reveal">Российская компания в сфере функционального питания, натуральной косметики и безопасного быта. Работает по модели прямых продаж — продукты приходят к тебе напрямую, без наценок розницы.</p>
+          <div class="stats reveal">
+            <div class="stat"><div class="num">25+</div><div class="lbl">лет на рынке<br/>(основана в 2000 г., Новосибирск)</div></div>
+            <div class="stat"><div class="num">2,5 млн+</div><div class="lbl">упаковок продукции<br/>с собственного производства в год</div></div>
+            <div class="stat"><div class="num">10+</div><div class="lbl">стран присутствия<br/>Россия, СНГ, Европа, Азия</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== СЛАЙД 3 — ПОЧЕМУ NL ===================== -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Почему люди выбирают NL</div>
+          <h2 class="title reveal">4 причины доверия</h2>
+          <div class="grid cols-4">
+            <div class="card glow stagger" style="--i:0"><div class="ico">🏭</div><h3>Своё производство</h3><p>Контроль качества на каждом этапе — от сырья до упаковки.</p></div>
+            <div class="card glow stagger" style="--i:1"><div class="ico">🌿</div><h3>Натуральный состав</h3><p>Продуманные формулы без лишней химии.</p></div>
+            <div class="card glow stagger" style="--i:2"><div class="ico">⏳</div><h3>Проверено временем</h3><p>Более четверти века и миллионы клиентов.</p></div>
+            <div class="card glow stagger" style="--i:3"><div class="ico">🔬</div><h3>Наука и технологии</h3><p>Функциональное питание нового поколения.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== СЛАЙД 4 — ENERGY DIET SMART ===================== -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Флагман</div>
+          <h2 class="title reveal">Energy Diet <span class="accent">Smart</span></h2>
+          <p class="lead reveal">Сбалансированный коктейль-питание: белки, жиры, углеводы и витамины в одной порции. Готовится за 30 секунд.</p>
+          <ul class="points reveal">
+            <li><span class="mark">✓</span><span><b>Контроль аппетита</b> <span class="dim">— помогает не перекусывать лишнего 3–4 часа</span></span></li>
+            <li><span class="mark">✓</span><span><b>25+ вкусов</b> <span class="dim">— от малины и ванили до шоколадного брауни и фисташки</span></span></li>
+            <li><span class="mark">✓</span><span><b>Удобная замена перекуса</b> <span class="dim">— около 200 ккал на порцию</span></span></li>
+          </ul>
+          <div style="margin-top:38px" class="reveal"><span class="chip">1 порция ≈ 199 ₽</span></div>
+        </div>
+        <div class="legal">Не является лекарственным средством. Перед применением проконсультируйтесь со специалистом.</div>
+      </section>
+
+      <!-- ===================== СЛАЙД 5 — ЛИНЕЙКА ПРОДУКТОВ ===================== -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Продукты на каждый день</div>
+          <h2 class="title reveal">Не только коктейли</h2>
+          <div class="grid cols-4 products">
+            <div class="card stagger" style="--i:0"><div class="ico">🥤</div><h3>Energy Diet Smart</h3><p>Функциональное питание</p></div>
+            <div class="card stagger" style="--i:1"><div class="ico">💪</div><h3>NL Sport</h3><p>Протеин и энергия</p></div>
+            <div class="card stagger" style="--i:2"><div class="ico">💧</div><h3>DrainEffect</h3><p>Напиток для лёгкости</p></div>
+            <div class="card stagger" style="--i:3"><div class="ico">✨</div><h3>Коллаген</h3><p>Кожа, волосы, суставы</p></div>
+            <div class="card stagger" style="--i:4"><div class="ico">💄</div><h3>Be Loved</h3><p>Корейская косметика</p></div>
+            <div class="card stagger" style="--i:5"><div class="ico">☕</div><h3>Кофе NL</h3><p>Мягкий, без кислотности</p></div>
+            <div class="card stagger" style="--i:6"><div class="ico">🧼</div><h3>Эко-быт</h3><p>Безопасная бытовая химия</p></div>
+            <div class="card stagger" style="--i:7"><div class="ico">🧒</div><h3>Детская линейка</h3><p>Витамины и омега-3</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== СЛАЙД 6 — НОВИНКИ 2026 ===================== -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Новинки 2026</div>
+          <h2 class="title reveal">Что появилось в этом году</h2>
+          <div class="grid cols-3">
+            <div class="card glow stagger" style="--i:0"><div class="ico">⏳</div><h3>Cellcode®</h3><p>Линейка ухода за молодостью кожи в паре с комплексом «Anti-Age Molecule».</p></div>
+            <div class="card glow stagger" style="--i:1"><div class="ico">🌱</div><h3>Зелёный коктейль</h3><p>22 растительных компонента, хлорофилл и источник клетчатки — для лёгкости и тонуса.</p></div>
+            <div class="card glow stagger" style="--i:2"><div class="ico">🌲</div><h3>Сибирская линейка</h3><p>Продукты на основе натуральных сибирских компонентов.</p></div>
+          </div>
+          <p class="lead reveal" style="margin-top:40px; font-size:26px">Компания постоянно обновляет ассортимент — следи за анонсами в официальном канале <b style="color:var(--emerald)">@nl25_news</b>.</p>
+        </div>
+      </section>
+
+      <!-- ===================== СЛАЙД 7 — БИЗНЕС ===================== -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Бизнес-возможность</div>
+          <h2 class="title reveal">Своё дело <span class="accent">без вложений</span></h2>
+          <ul class="points reveal">
+            <li><span class="mark">✓</span><span><b>Гибкий график</b> <span class="dim">— совмещается с основной работой, можно начать вечерами и в выходные</span></span></li>
+            <li><span class="mark">✓</span><span><b>Скидка 20–30%</b> <span class="dim">на продукты для себя и семьи — выгода ощутима сразу</span></span></li>
+            <li><span class="mark">✓</span><span><b>Бесплатное обучение</b> <span class="dim">и личный наставник в первой линии</span></span></li>
+            <li><span class="mark">✓</span><span><b>Без рисков на старте</b> <span class="dim">— не нужно выкупать товар вперёд</span></span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ===================== СЛАЙД 8 — ЧЕСТНО О ДОХОДЕ ===================== -->
+      <section class="slide statement">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal" style="margin-bottom:30px">Честно о доходе</div>
+          <p class="big reveal">Здесь нет «миллиона за месяц».<br/>Есть понятная система: <span class="hl">чем активнее ты — тем больше результат.</span></p>
+          <p class="sub reveal">Большинство партнёров начинают как подработку и растят доход постепенно — со своих покупок, заказов клиентов и развития команды. Никаких обещаний «лёгких денег» — только реальная работа и поддержка.</p>
+        </div>
+      </section>
+
+      <!-- ===================== СЛАЙД 9 — КАК НАЧАТЬ ===================== -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Старт за 3 шага</div>
+          <h2 class="title reveal">Как стать партнёром</h2>
+          <div class="steps">
+            <div class="step stagger" style="--i:0"><div class="n">1</div><h3>Регистрация</h3><p>Бесплатно, по моей ссылке — за пару минут.</p></div>
+            <div class="step stagger" style="--i:1"><div class="n">2</div><h3>Первый выбор</h3><p>Берёшь продукты для себя или клиентов уже со скидкой партнёра.</p></div>
+            <div class="step stagger" style="--i:2"><div class="n">3</div><h3>Обучение</h3><p>Я и команда помогаем разобраться и сделать первые шаги.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== СЛАЙД 10 — КАК ЗАКАЗАТЬ ===================== -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Просто купить продукты</div>
+          <h2 class="title reveal">Как заказать по ссылке</h2>
+          <div class="steps">
+            <div class="step stagger" style="--i:0"><div class="n">1</div><h3>Открой ссылку</h3><p>Переходишь в фирменный интернет-магазин NL по моей реферальной ссылке.</p></div>
+            <div class="step stagger" style="--i:1"><div class="n">2</div><h3>Выбери продукт</h3><p>Каталог с описаниями, отзывами и составом — всё прозрачно.</p></div>
+            <div class="step stagger" style="--i:2"><div class="n">3</div><h3>Оформи заказ</h3><p>Доставка по России и СНГ. Остаёшься со мной на связи по вопросам.</p></div>
+          </div>
+          <div style="margin-top:46px" class="reveal"><a class="chip" href="https://oleg-nl.netlify.app/" target="_blank" rel="noopener">🔗 oleg-nl.netlify.app — все ссылки в одном месте</a></div>
+        </div>
+      </section>
+
+      <!-- ===================== СЛАЙД 11 — КОНТАКТЫ ===================== -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Я на связи</div>
+          <h2 class="title reveal">Напиши мне в любой сети</h2>
+          <div class="contact-grid reveal">
+            <a class="contact" href="https://t.me/Simka1969" target="_blank" rel="noopener"><span class="badge b-tg">✈</span><span><span class="who">Telegram</span><br/><span class="handle">@Simka1969</span></span></a>
+            <a class="contact" href="https://vk.com/osimonov69" target="_blank" rel="noopener"><span class="badge b-vk">VK</span><span><span class="who">ВКонтакте</span><br/><span class="handle">vk.com/osimonov69</span></span></a>
+            <a class="contact" href="https://www.instagram.com/simonov3480/" target="_blank" rel="noopener"><span class="badge b-ig">📷</span><span><span class="who">Instagram</span><br/><span class="handle">@simonov3480</span></span></a>
+            <a class="contact" href="https://max.ru/u/f9LHodD0cOK5EUW9G28247APoeFbOPDWpAqEC22Efm-fJD3fgU7gOGBstEA" target="_blank" rel="noopener"><span class="badge b-mx">MAX</span><span><span class="who">MAX</span><br/><span class="handle">мессенджер MAX</span></span></a>
+            <a class="contact" href="https://t.me/Simka1969_nl" target="_blank" rel="noopener"><span class="badge b-tg">📢</span><span><span class="who">Мой Telegram-канал</span><br/><span class="handle">@Simka1969_nl</span></span></a>
+            <a class="contact" href="https://t.me/nl25_news" target="_blank" rel="noopener"><span class="badge b-nl">NL</span><span><span class="who">Официальный канал NL</span><br/><span class="handle">@nl25_news</span></span></a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== СЛАЙД 12 — ФИНАЛ / CTA ===================== -->
+      <section class="slide closing">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <h2 class="reveal">Сделай <span class="accent">первый шаг</span><br/>сегодня</h2>
+          <div class="cta-buttons reveal">
+            <a class="cta cta-primary" href="https://nlstar.com/ref/WEWxBD/" target="_blank" rel="noopener"><span class="ico">🛒</span><span>Купить продукты в магазине<span class="sub">Каталог NL со скидкой по моей ссылке</span></span><span class="arr">→</span></a>
+            <a class="cta cta-gold" href="https://nlstore.com/ref/rhhBvA/" target="_blank" rel="noopener"><span class="ico">🚀</span><span>Узнать о бизнесе NL<span class="sub">Как зарабатывать с NL — коротко и по делу</span></span><span class="arr">→</span></a>
+            <a class="cta cta-ghost" href="https://nlstar.com/ref/cbGX2G/" target="_blank" rel="noopener"><span class="ico">✅</span><span>Регистрация в мою команду<span class="sub">Стать партнёром в 1 линию</span></span><span class="arr">→</span></a>
+          </div>
+          <a class="url reveal" href="https://oleg-nl.netlify.app/" target="_blank" rel="noopener">🔗 oleg-nl.netlify.app</a>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Навигация (хром вне слайда) -->
+  <div class="deck-controls">
+    <button id="prevBtn" aria-label="Назад">‹</button>
+    <span class="counter" id="counter">1 / 12</span>
+    <button id="nextBtn" aria-label="Вперёд">›</button>
+  </div>
+
+  <script>
+    /* ===========================================
+       КОНТРОЛЛЕР ПРЕЗЕНТАЦИИ
+       - масштабирование сцены 1920×1080 под окно
+       - навигация: стрелки, пробел, PageUp/Down, Home/End,
+         колесо мыши, свайп на телефоне, кнопки
+       - прогресс-бар и счётчик слайдов
+       =========================================== */
+    class SlidePresentation {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.current = 0;
+        this.stage = document.getElementById('deckStage');
+        this.bar = document.getElementById('progressBar');
+        this.counter = document.getElementById('counter');
+        this.setupScale();
+        this.setupKeys();
+        this.setupWheel();
+        this.setupTouch();
+        document.getElementById('prevBtn').onclick = () => this.go(this.current - 1);
+        document.getElementById('nextBtn').onclick = () => this.go(this.current + 1);
+        this.show(0);
+      }
+
+      /* Масштабируем всю сцену одним transform (леттербокс по краям) */
+      setupScale() {
+        const scale = () => {
+          const f = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+          const x = (window.innerWidth - 1920 * f) / 2;
+          const y = (window.innerHeight - 1080 * f) / 2;
+          this.stage.style.transform = `translate(${x}px, ${y}px) scale(${f})`;
+        };
+        scale();
+        window.addEventListener('resize', scale);
+      }
+
+      setupKeys() {
+        document.addEventListener('keydown', (e) => {
+          if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); this.go(this.current + 1); }
+          else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); this.go(this.current - 1); }
+          else if (e.key === 'Home') { this.go(0); }
+          else if (e.key === 'End') { this.go(this.slides.length - 1); }
+        });
+      }
+
+      /* Колесо мыши с защитой от слишком частого срабатывания */
+      setupWheel() {
+        let lock = false;
+        window.addEventListener('wheel', (e) => {
+          if (lock || Math.abs(e.deltaY) < 18) return;
+          lock = true;
+          this.go(this.current + (e.deltaY > 0 ? 1 : -1));
+          setTimeout(() => lock = false, 700);
+        }, { passive: true });
+      }
+
+      /* Свайп на сенсорных экранах */
+      setupTouch() {
+        let x0 = null;
+        window.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+        window.addEventListener('touchend', (e) => {
+          if (x0 === null) return;
+          const dx = e.changedTouches[0].clientX - x0;
+          if (Math.abs(dx) > 50) this.go(this.current + (dx < 0 ? 1 : -1));
+          x0 = null;
+        }, { passive: true });
+      }
+
+      go(i) { this.show(Math.max(0, Math.min(i, this.slides.length - 1))); }
+
+      show(i) {
+        this.current = i;
+        this.slides.forEach((s, n) => {
+          s.classList.toggle('active', n === i);
+          s.classList.toggle('visible', n === i);
+        });
+        this.bar.style.width = ((i + 1) / this.slides.length * 100) + '%';
+        this.counter.textContent = (i + 1) + ' / ' + this.slides.length;
+      }
+    }
+    new SlidePresentation();
+  </script>
+</body>
+</html>
