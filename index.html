@@ -5,27 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Олег Симонов — Продукты и бизнес NL</title>
   <meta name="description" content="Качественные продукты NL для тебя и твоей семьи. Покупка в интернет-магазине, регистрация и бизнес NL." />
-
-  <!-- Соцсети: красивое превью при отправке ссылки -->
   <meta property="og:title" content="Олег Симонов — Продукты и бизнес NL" />
   <meta property="og:description" content="Качественные продукты NL для тебя и семьи + возможности бизнеса. Все ссылки в одном месте." />
   <meta property="og:type" content="website" />
+
+  <!-- Playfair Display — display-шрифт для имени / Jost — чистый геометрик для текста -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
       --green-1: #0f766e;
       --green-2: #15a08c;
       --accent: #16a34a;
-      --accent-dark: #128a3e;
-      --ink: #1f2937;
+      --accent-dark: #0d7a3a;
+      --ink: #1c2b28;
       --muted: #6b7280;
-      --card: #ffffff;
+      --card: #fdfcfb;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
       background: linear-gradient(160deg, #0b3d3a 0%, #0f766e 45%, #15a08c 100%);
       min-height: 100vh;
       color: var(--ink);
@@ -35,53 +38,101 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* ── Grain-текстура поверх фона ── */
+    .grain-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.07;
+      pointer-events: none;
+      z-index: 1;
+      mix-blend-mode: overlay;
+    }
+
+    /* ── Staggered fade-up анимация загрузки ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim {
+      animation: fadeUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
     .wrap {
       width: 100%;
       max-width: 460px;
+      position: relative;
+      z-index: 2;
     }
 
     .card {
       background: var(--card);
-      border-radius: 26px;
-      padding: 28px 22px 26px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+      border-radius: 28px;
+      padding: 32px 22px 28px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.28);
       text-align: center;
     }
 
-    .avatar {
-      width: 112px;
-      height: 112px;
+    /* ── Аватар: градиентное кольцо ── */
+    .avatar-ring {
+      width: 122px;
+      height: 122px;
       border-radius: 50%;
-      margin: 0 auto 14px;
+      background: linear-gradient(135deg, #064e3b 0%, #0d9488 55%, #6ee7b7 100%);
+      padding: 3px;
+      margin: 0 auto 16px;
+      box-shadow: 0 10px 28px rgba(15,118,110,0.45);
+    }
+    .avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
       object-fit: cover;
-      border: 4px solid #fff;
-      box-shadow: 0 8px 22px rgba(15,118,110,0.40);
+      border: 2.5px solid var(--card);
       display: block;
     }
 
+    /* ── Заголовок: display-шрифт ── */
     h1 {
-      font-size: 22px;
-      margin-bottom: 4px;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      margin-bottom: 6px;
+      color: var(--ink);
     }
 
     .tagline {
       color: var(--muted);
-      font-size: 14.5px;
-      line-height: 1.45;
-      margin-bottom: 22px;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.55;
+      margin-bottom: 24px;
       padding: 0 4px;
     }
 
+    /* ── Section label с декоративной линией ── */
     .section-label {
       text-align: left;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 1px;
       color: var(--muted);
-      margin: 22px 4px 10px;
+      margin: 24px 4px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #dde5e3;
     }
 
+    /* ── Кнопки ── */
     .btn {
       display: flex;
       align-items: center;
@@ -89,41 +140,69 @@
       width: 100%;
       min-height: 58px;
       padding: 12px 18px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       border-radius: 16px;
       text-decoration: none;
-      font-size: 16px;
+      font-family: 'Jost', sans-serif;
+      font-size: 15.5px;
       font-weight: 600;
-      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      transition: transform .15s ease, box-shadow .15s ease;
       border: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
     }
-    .btn:active { transform: scale(0.98); }
+    .btn:active { transform: scale(0.98) !important; }
 
+    /* Primary: зелёный градиент + shimmer при hover */
     .btn-primary {
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       color: #fff;
-      box-shadow: 0 8px 18px rgba(22,163,74,0.30);
+      box-shadow: 0 8px 20px rgba(22,163,74,0.30);
     }
-    .btn-primary:hover { filter: brightness(1.05); box-shadow: 0 10px 24px rgba(22,163,74,0.40); }
+    .btn-primary:hover {
+      box-shadow: 0 12px 30px rgba(22,163,74,0.42);
+      transform: translateY(-1px);
+    }
+    /* Shimmer-блик */
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        105deg,
+        transparent 30%,
+        rgba(255,255,255,0.22) 50%,
+        transparent 70%
+      );
+      transform: translateX(-130%);
+      transition: transform 0.55s ease;
+    }
+    .btn-primary:hover::after {
+      transform: translateX(130%);
+    }
 
     .btn-outline {
-      background: #f8fafc;
+      background: #f0f5f3;
       color: var(--ink);
-      border-color: #e2e8f0;
+      border-color: #dde5e3;
     }
-    .btn-outline:hover { border-color: var(--green-2); background: #f1fdfa; }
+    .btn-outline:hover {
+      border-color: var(--green-2);
+      background: #eaf5f2;
+      transform: translateY(-1px);
+    }
 
-    .btn .emoji { font-size: 22px; line-height: 1; }
+    .btn .emoji { font-size: 22px; line-height: 1; flex-shrink: 0; }
     .btn .txt { flex: 1; text-align: left; }
-    .btn .txt small { display: block; font-weight: 500; font-size: 12.5px; opacity: 0.8; margin-top: 2px; }
-    .btn .arrow { opacity: 0.55; font-size: 18px; }
+    .btn .txt small { display: block; font-weight: 400; font-size: 12px; opacity: 0.72; margin-top: 2px; }
+    .btn .arrow { opacity: 0.38; font-size: 18px; flex-shrink: 0; }
 
-    /* Соцсети */
+    /* ── Соцсети ── */
     .socials {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 14px;
+      gap: 12px;
       margin-top: 8px;
     }
     .social {
@@ -134,13 +213,17 @@
       align-items: center;
       justify-content: center;
       color: #fff;
+      font-family: 'Jost', sans-serif;
       font-weight: 700;
-      font-size: 15px;
+      font-size: 14px;
       text-decoration: none;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.18);
-      transition: transform .12s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      transition: transform .2s cubic-bezier(0.22,1,0.36,1), box-shadow .2s ease;
     }
-    .social:hover { transform: translateY(-3px); }
+    .social:hover {
+      transform: translateY(-5px) scale(1.1);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.26);
+    }
     .social span { font-size: 22px; line-height: 1; }
 
     .tg { background: #229ED9; }
@@ -148,9 +231,9 @@
     .ig { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
     .ok { background: #EE8208; }
     .fb { background: #1877F2; }
-    .mx { background: #6C5CE7; font-size: 13px; }
+    .mx { background: #6C5CE7; font-size: 12px; }
 
-    /* Каталог продуктов */
+    /* ── Карточки продуктов ── */
     .products {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -162,82 +245,108 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
-      padding: 14px 10px 12px;
-      background: #f8fafc;
-      border: 2px solid #e2e8f0;
-      border-radius: 14px;
+      padding: 16px 10px 14px;
+      background: #f0f5f3;
+      border: 2px solid #dde5e3;
+      border-radius: 16px;
       text-decoration: none;
       color: var(--ink);
-      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      transition: transform .2s cubic-bezier(0.22,1,0.36,1), border-color .15s ease, box-shadow .15s ease;
     }
     .product:hover {
-      transform: translateY(-2px);
+      transform: translateY(-3px);
       border-color: var(--green-2);
-      background: #f1fdfa;
+      box-shadow: 0 8px 22px rgba(15,118,110,0.15);
     }
-    .p-emoji { font-size: 32px; line-height: 1; margin-bottom: 6px; }
+    .p-emoji { font-size: 32px; line-height: 1; margin-bottom: 8px; }
     .p-name {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 700;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
+      line-height: 1.25;
     }
     .p-desc {
-      font-size: 11.5px;
+      font-size: 11px;
       color: var(--muted);
-      line-height: 1.35;
-      margin-bottom: 8px;
+      font-weight: 400;
+      line-height: 1.4;
+      margin-bottom: 10px;
     }
+    /* Цена-бейдж */
     .p-price {
-      font-size: 12.5px;
+      display: inline-block;
+      background: linear-gradient(135deg, var(--green-1), var(--green-2));
+      color: #fff;
+      font-size: 11.5px;
       font-weight: 700;
-      color: var(--green-1);
+      padding: 3px 11px;
+      border-radius: 999px;
+      margin-top: auto;
+      letter-spacing: 0.2px;
     }
+
     @media (max-width: 360px) {
       .products { grid-template-columns: 1fr; }
     }
 
     footer {
       margin-top: 22px;
-      color: rgba(255,255,255,0.85);
+      color: rgba(255,255,255,0.82);
+      font-family: 'Jost', sans-serif;
       font-size: 12.5px;
+      font-weight: 400;
       text-align: center;
-      line-height: 1.5;
+      line-height: 1.6;
     }
-    footer a { color: #fff; }
+    footer a { color: rgba(255,255,255,0.95); }
   </style>
 </head>
 <body>
+
+  <!-- Grain-текстура (inline SVG + feTurbulence) -->
+  <svg aria-hidden="true" class="grain-overlay" xmlns="http://www.w3.org/2000/svg">
+    <filter id="grain-f">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grain-f)"/>
+  </svg>
+
   <div class="wrap">
     <div class="card">
-      <img class="avatar" src="foto.jpg" alt="Олег Симонов" />
-      <h1>Олег Симонов</h1>
-      <p class="tagline">
+
+      <!-- Аватар с градиентным кольцом — появляется первым -->
+      <div class="avatar-ring anim" style="animation-delay:0s">
+        <img class="avatar" src="foto.jpg" alt="Олег Симонов" />
+      </div>
+
+      <h1 class="anim" style="animation-delay:0.1s">Олег Симонов</h1>
+      <p class="tagline anim" style="animation-delay:0.17s">
         Качественные продукты <b>NL</b> для тебя и твоей семьи 🌿<br />
         Здоровье, забота о доме и возможности бизнеса
       </p>
 
-      <!-- ОСНОВНЫЕ КНОПКИ (реферальные ссылки) -->
-      <a class="btn btn-primary" href="https://nlstar.com/ref/WEWxBD/" target="_blank" rel="noopener">
+      <!-- ОСНОВНЫЕ КНОПКИ -->
+      <a class="btn btn-primary anim" href="https://nlstar.com/ref/WEWxBD/" target="_blank" rel="noopener" style="animation-delay:0.24s">
         <span class="emoji">🛒</span>
         <span class="txt">Купить продукты в магазине<small>Каталог NL со скидкой по моей ссылке</small></span>
         <span class="arrow">→</span>
       </a>
 
-      <a class="btn btn-primary" href="https://nlstore.com/ref/rhhBvA/" target="_blank" rel="noopener">
+      <a class="btn btn-primary anim" href="https://nlstore.com/ref/rhhBvA/" target="_blank" rel="noopener" style="animation-delay:0.32s">
         <span class="emoji">🚀</span>
         <span class="txt">Узнать о бизнесе NL<small>Как зарабатывать с NL — коротко и по делу</small></span>
         <span class="arrow">→</span>
       </a>
 
-      <a class="btn btn-outline" href="https://nlstar.com/ref/cbGX2G/" target="_blank" rel="noopener">
+      <a class="btn btn-outline anim" href="https://nlstar.com/ref/cbGX2G/" target="_blank" rel="noopener" style="animation-delay:0.4s">
         <span class="emoji">✅</span>
         <span class="txt">Регистрация в 1 линию<small>Стать партнёром в моей команде</small></span>
         <span class="arrow">→</span>
       </a>
 
       <!-- КАТАЛОГ ПРОДУКТОВ -->
-      <div class="section-label">Популярные продукты NL</div>
-      <div class="products">
+      <div class="section-label anim" style="animation-delay:0.48s">Популярные продукты NL</div>
+      <div class="products anim" style="animation-delay:0.54s">
         <a class="product" href="https://nlstar.com/ref/WEWxBD/" target="_blank" rel="noopener">
           <div class="p-emoji">🥤</div>
           <div class="p-name">Energy Diet Smart</div>
@@ -271,8 +380,8 @@
       </div>
 
       <!-- СОЦСЕТИ -->
-      <div class="section-label">Я в соцсетях</div>
-      <div class="socials">
+      <div class="section-label anim" style="animation-delay:0.66s">Я в соцсетях</div>
+      <div class="socials anim" style="animation-delay:0.72s">
         <a class="social tg" href="https://t.me/Simka1969" target="_blank" rel="noopener" title="Telegram"><span>✈</span></a>
         <a class="social vk" href="https://vk.com/osimonov69" target="_blank" rel="noopener" title="ВКонтакте">VK</a>
         <a class="social ig" href="https://www.instagram.com/simonov3480/" target="_blank" rel="noopener" title="Instagram"><span>📷</span></a>
@@ -280,9 +389,10 @@
         <a class="social fb" href="https://www.facebook.com/profile.php?id=100001930710021" target="_blank" rel="noopener" title="Facebook">f</a>
         <a class="social mx" href="https://max.ru/u/f9LHodD0cOK5EUW9G28247APoeFbOPDWpAqEC22Efm-fJD3fgU7gOGBstEA" target="_blank" rel="noopener" title="MAX">MAX</a>
       </div>
+
     </div>
 
-    <footer>
+    <footer class="anim" style="animation-delay:0.84s">
       © Олег Симонов · Независимый партнёр NL<br />
       📢 Telegram-канал: <a href="https://t.me/Simka1969_nl" target="_blank" rel="noopener">@Simka1969_nl</a><br />
       Напиши мне в любой соцсети — отвечу и помогу с выбором 💬
