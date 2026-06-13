@@ -34,9 +34,16 @@ $base = [System.IO.Path]::GetFileNameWithoutExtension($post.Name)
 $img = Get-ChildItem -Path $queueDir -File |
        Where-Object { $_.BaseName -eq $base -and $_.Extension -match '\.(jpg|jpeg|png)$' } |
        Select-Object -First 1
+# --- видео с тем же именем (01-reel.mp4) — шлём как видео-пост (вертикальный анонс) ---
+$video = Get-ChildItem -Path $queueDir -File |
+         Where-Object { $_.BaseName -eq $base -and $_.Extension -match '\.(mp4|mov)$' } |
+         Select-Object -First 1
 
 try {
-    if ($img) {
+    if ($video) {
+        $form = @{ chat_id = $channel; caption = $text; video = Get-Item $video.FullName; supports_streaming = 'true' }
+        $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendVideo" -Method Post -Form $form
+    } elseif ($img) {
         $form = @{ chat_id = $channel; caption = $text; photo = Get-Item $img.FullName }
         $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendPhoto" -Method Post -Form $form
     } else {
@@ -47,9 +54,10 @@ try {
     if ($resp.ok) {
         $ts = Get-Date -Format 'yyyyMMdd-HHmmss'
         Move-Item $post.FullName (Join-Path $sentDir "$ts-$($post.Name)")
-        if ($img) { Move-Item $img.FullName (Join-Path $sentDir "$ts-$($img.Name)") }
+        if ($img)   { Move-Item $img.FullName   (Join-Path $sentDir "$ts-$($img.Name)") }
+        if ($video) { Move-Item $video.FullName (Join-Path $sentDir "$ts-$($video.Name)") }
         $left = (Get-ChildItem -Path $queueDir -Filter '*.txt' -File | Measure-Object).Count
-        Log "OK: опубликован '$($post.Name)'$(if($img){' (с фото)'}). В очереди осталось: $left."
+        Log "OK: опубликован '$($post.Name)'$(if($video){' (видео)'}elseif($img){' (с фото)'}). В очереди осталось: $left."
     } else {
         Log "Ошибка API: $($resp | ConvertTo-Json -Compress)"
         exit 1
