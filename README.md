@@ -23,28 +23,27 @@ NL_produkt/
 │   ├── Test-Bot.ps1            # Проверка подключения
 │   ├── Make-PostImage.ps1      # Генератор картинок
 │   ├── Check-Queue-Refill.ps1  # Автопополнение очереди (09:00)
-│   ├── config.json             # Токен бота и ID канала
-│   ├── config.example.json     # Пример конфига
+│   ├── config.example.json     # Пример конфига (скопируй → config.json)
 │   ├── queue/                  # Посты на публикацию (.txt + .png)
-│   └── backlog/                # Запас постов (35 штук)
+│   └── backlog/                # Запас постов
 │
 ├── vk-bot/                     # ВКонтакте-бот
 │   ├── Post-Next-VK.ps1
 │   ├── Setup-Schedule-VK.ps1   # Расписание (14:00)
 │   ├── Test-Bot-VK.ps1
-│   └── config.json
+│   └── config.example.json     # Пример конфига
 │
 ├── ig-bot/                     # Instagram-бот
 │   ├── Post-Next-IG.ps1
 │   ├── Setup-Schedule-IG.ps1   # Расписание (12:00)
 │   ├── Test-Bot-IG.ps1
-│   └── config.json
+│   └── config.example.json     # Пример конфига
 │
 └── fb-bot/                     # Facebook-бот
     ├── Post-Next-FB.ps1
     ├── Setup-Schedule-FB.ps1   # Расписание (11:00)
     ├── Test-Bot-FB.ps1
-    └── config.json
+    └── config.example.json     # Пример конфига
 ```
 
 ## Быстрый старт
