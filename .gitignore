@@ -4,6 +4,9 @@ vk-bot/config.json
 ig-bot/config.json
 fb-bot/config.json
 
+# Временный файл при обновлении Meta-токена (никогда не коммитить!)
+meta-token.txt
+
 # Логи и отправленные посты
 tg-bot/logs/
 tg-bot/sent/
