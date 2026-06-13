@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Как заказать продукты NL — пошаговый гайд · Олег Симонов</title>
+  <meta name="description" content="Пошаговый гайд для новичков: как заказать продукты NL по реферальной ссылке. Просто, за несколько минут, с поддержкой." />
+  <meta property="og:title" content="Как заказать продукты NL — гайд для новичков" />
+  <meta property="og:description" content="Открой ссылку, выбери продукт, оформи заказ. Помогу с выбором на каждом шаге." />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===========================================
+       ТЕМА — единая с другими презентациями (бренд).
+       Здесь акцент свежий изумрудный — «легко и понятно».
+       =========================================== */
+    :root{
+      --bg-0:#061310;--bg-1:#0a201a;--bg-2:#0e2a22;
+      --ink:#f4efe4;--muted:#9db5a8;
+      --emerald:#37dca0;--emerald-dim:#0f766e;--gold:#e3b873;
+      --line:rgba(244,239,228,0.12);--card-line:rgba(55,220,160,0.18);
+      --stage-bg:#04100c;--slide-bg:var(--bg-0);
+      --font-display:'Playfair Display',Georgia,serif;
+      --font-body:'Manrope',-apple-system,sans-serif;
+      --ease:cubic-bezier(0.16,1,0.3,1);--dur:0.7s;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+
+    /* === viewport-base.css (полностью) === */
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg,#000);font-family:var(--font-body);}
+    .deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg,#000);}
+    .deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--slide-bg,#fff);}
+    .slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--slide-bg,#fff);}
+    .slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1;}
+    img,video,canvas,svg{max-width:100%;max-height:100%;}
+    .deck-controls{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000;}
+    @media print{
+      html,body{width:1920px;height:auto;overflow:visible;background:#fff;}
+      .deck-viewport{position:static;overflow:visible;background:#fff;}
+      .deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none;}
+      .slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always;}
+      .slide:last-child{break-after:auto;page-break-after:auto;}
+      .deck-controls,.progress-bar{display:none!important;}
+    }
+    @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.2s!important;}}
+    /* === конец viewport-base.css === */
+
+    .slide{color:var(--ink);
+      background:
+        radial-gradient(1100px 760px at 82% -8%, rgba(55,220,160,0.16), transparent 60%),
+        radial-gradient(900px 700px at 6% 108%, rgba(227,184,115,0.10), transparent 58%),
+        linear-gradient(160deg,#08201a 0%,#061511 55%,#040d0a 100%);}
+    .grain{position:absolute;inset:0;opacity:0.05;pointer-events:none;mix-blend-mode:overlay;z-index:0;}
+    .slide::after{content:'';position:absolute;right:-220px;bottom:-260px;width:720px;height:720px;border-radius:50%;
+      border:1.5px solid rgba(55,220,160,0.14);box-shadow:inset 0 0 120px rgba(55,220,160,0.06);pointer-events:none;}
+
+    .slide-content{position:relative;z-index:1;width:100%;height:100%;padding:104px 132px;display:flex;flex-direction:column;}
+
+    .kicker{font-family:var(--font-body);font-size:22px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--emerald);display:flex;align-items:center;gap:18px;}
+    .kicker::before{content:'';width:56px;height:2px;background:linear-gradient(90deg,var(--emerald),transparent);}
+
+    h2.title{font-family:var(--font-display);font-weight:800;font-size:88px;line-height:1.04;margin:26px 0 18px;letter-spacing:0.5px;}
+    h2.title .accent{color:var(--gold);font-style:italic;font-weight:700;}
+    .lead{font-size:31px;line-height:1.5;color:var(--muted);max-width:1180px;font-weight:500;}
+
+    .points{list-style:none;margin-top:40px;display:flex;flex-direction:column;gap:24px;}
+    .points li{display:flex;align-items:flex-start;gap:22px;font-size:30px;line-height:1.4;font-weight:500;}
+    .points li .mark{flex-shrink:0;margin-top:4px;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(55,220,160,0.14);border:1px solid var(--card-line);color:var(--emerald);font-size:22px;font-weight:800;}
+    .points li b{color:var(--ink);font-weight:800;}
+    .points li .dim{color:var(--muted);}
+
+    .chip{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--emerald-dim),var(--emerald));color:#04130d;font-weight:800;font-size:26px;padding:14px 26px;border-radius:999px;text-decoration:none;box-shadow:0 14px 34px rgba(55,220,160,0.22);transition:transform .18s var(--ease),box-shadow .18s var(--ease);}
+    a.chip:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(55,220,160,0.32);}
+
+    .reveal{opacity:0;transform:translateY(34px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease);}
+    .slide.visible .reveal{opacity:1;transform:translateY(0);}
+    .slide.visible .reveal:nth-child(1){transition-delay:.05s;}
+    .slide.visible .reveal:nth-child(2){transition-delay:.15s;}
+    .slide.visible .reveal:nth-child(3){transition-delay:.25s;}
+    .slide.visible .reveal:nth-child(4){transition-delay:.35s;}
+    .slide.visible .reveal:nth-child(5){transition-delay:.45s;}
+    .stagger{opacity:0;transform:translateY(34px) scale(.985);transition:opacity .7s var(--ease),transform .7s var(--ease);transition-delay:calc(var(--i,0)*.08s + .15s);}
+    .slide.visible .stagger{opacity:1;transform:translateY(0) scale(1);}
+
+    /* Титул */
+    .title-slide .slide-content{align-items:center;justify-content:center;text-align:center;padding:80px;}
+    .avatar-ring{width:190px;height:190px;border-radius:50%;background:linear-gradient(135deg,var(--emerald-dim),var(--emerald) 55%,var(--gold));padding:4px;margin-bottom:32px;box-shadow:0 20px 60px rgba(55,220,160,0.30);}
+    .avatar-ring img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:4px solid #061511;display:block;}
+    .title-slide h1{font-family:var(--font-display);font-weight:900;font-size:112px;line-height:1.02;letter-spacing:1px;}
+    .title-slide h1 .accent{color:var(--gold);font-style:italic;}
+    .title-slide .role{font-size:30px;font-weight:600;color:var(--emerald);letter-spacing:1px;margin-top:14px;}
+    .title-slide .tag{font-size:28px;color:var(--muted);margin-top:22px;max-width:1000px;line-height:1.5;}
+    .scroll-hint{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);font-size:20px;color:var(--muted);letter-spacing:1px;display:flex;align-items:center;gap:10px;}
+    .scroll-hint .arr{animation:bob 1.8s var(--ease) infinite;}
+    @keyframes bob{0%,100%{transform:translateX(0);}50%{transform:translateX(8px);}}
+
+    .grid{display:grid;gap:22px;margin-top:46px;}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+    .card{background:linear-gradient(165deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015));border:1px solid var(--line);border-radius:22px;padding:30px;display:flex;flex-direction:column;gap:12px;}
+    .card .ico{font-size:46px;line-height:1;}
+    .card h3{font-size:28px;font-weight:800;color:var(--ink);}
+    .card p{font-size:21px;line-height:1.45;color:var(--muted);font-weight:500;}
+    .card.glow{border-color:var(--card-line);box-shadow:0 0 0 1px rgba(55,220,160,0.05),0 24px 50px rgba(0,0,0,0.32);}
+
+    /* Крупный шаг — один на слайд: большой номер + текст + иконка */
+    .bigstep{display:flex;align-items:center;gap:70px;margin-top:auto;margin-bottom:auto;}
+    .bigstep .num{font-family:var(--font-display);font-weight:900;font-size:300px;line-height:0.8;
+      background:linear-gradient(160deg,var(--emerald),var(--emerald-dim));-webkit-background-clip:text;background-clip:text;color:transparent;flex-shrink:0;}
+    .bigstep .body{max-width:1000px;}
+    .bigstep .body h3{font-family:var(--font-display);font-weight:800;font-size:64px;line-height:1.05;margin-bottom:20px;}
+    .bigstep .body p{font-size:30px;line-height:1.5;color:var(--muted);font-weight:500;}
+    .bigstep .body .hl{color:var(--emerald);font-weight:700;}
+    .bigstep .ico{font-size:120px;margin-left:auto;flex-shrink:0;opacity:0.9;}
+
+    .closing .slide-content{align-items:center;justify-content:center;text-align:center;}
+    .closing h2{font-family:var(--font-display);font-weight:900;font-size:96px;line-height:1.04;margin-bottom:16px;}
+    .closing h2 .accent{color:var(--gold);font-style:italic;}
+    .cta-buttons{display:flex;flex-direction:column;gap:18px;margin-top:40px;max-width:1000px;width:100%;}
+    .cta{display:flex;align-items:center;gap:20px;padding:26px 32px;border-radius:18px;text-decoration:none;font-size:28px;font-weight:700;transition:transform .18s,box-shadow .18s;text-align:left;}
+    .cta .ico{font-size:34px;}
+    .cta .arr{margin-left:auto;opacity:0.6;}
+    .cta:hover{transform:translateY(-2px);}
+    .cta .sub{display:block;font-size:18px;font-weight:600;opacity:0.78;}
+    .cta-primary{background:linear-gradient(135deg,var(--emerald),var(--emerald-dim));color:#04130d;box-shadow:0 16px 38px rgba(55,220,160,0.28);}
+    .cta-ghost{background:rgba(255,255,255,0.05);border:1px solid var(--card-line);color:var(--ink);}
+    .cta-ghost .sub{color:var(--muted);}
+    .closing .url{display:inline-block;margin-top:34px;font-size:30px;font-weight:700;color:var(--emerald);letter-spacing:1px;text-decoration:none;border-bottom:2px solid transparent;transition:border-color .2s,color .2s;}
+    .closing a.url:hover{color:#5ef0bb;border-bottom-color:var(--emerald);}
+
+    .progress-bar{position:fixed;top:0;left:0;height:4px;width:0%;background:linear-gradient(90deg,var(--emerald),var(--gold));z-index:1001;transition:width .4s var(--ease);}
+    .deck-controls{display:flex;align-items:center;gap:16px;background:rgba(6,19,16,0.7);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:999px;padding:8px 14px;}
+    .deck-controls button{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,0.06);color:var(--ink);font-size:18px;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+    .deck-controls button:hover{background:rgba(55,220,160,0.18);}
+    .deck-controls .counter{font-size:18px;color:var(--muted);font-weight:600;min-width:64px;text-align:center;font-variant-numeric:tabular-nums;}
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="grainf"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter>
+  </svg>
+
+  <div class="progress-bar" id="progressBar"></div>
+
+  <div class="deck-viewport">
+    <main class="deck-stage" id="deckStage">
+
+      <!-- 1 — ТИТУЛ -->
+      <section class="slide title-slide active">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="avatar-ring reveal"><img src="foto.jpg" alt="Олег Симонов" /></div>
+          <h1 class="reveal">Как заказать<br/>продукты <span class="accent">NL</span></h1>
+          <div class="role reveal">Пошаговый гайд для новичков</div>
+          <p class="tag reveal">Это просто и занимает несколько минут.<br/>Я помогу с выбором на каждом шаге.</p>
+        </div>
+        <div class="scroll-hint">листайте: стрелки · пробел · свайп <span class="arr">→</span></div>
+      </section>
+
+      <!-- 2 — ЗАЧЕМ ЧЕРЕЗ ПАРТНЁРА -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Почему через меня</div>
+          <h2 class="title reveal">3 плюса для тебя</h2>
+          <div class="grid cols-3">
+            <div class="card glow stagger" style="--i:0"><div class="ico">🛡️</div><h3>Только оригинал</h3><p>Заказ напрямую в фирменном магазине NL — без подделок.</p></div>
+            <div class="card glow stagger" style="--i:1"><div class="ico">🏷️</div><h3>Фирменная цена</h3><p>Покупаешь по официальному каталогу, без накруток перекупов.</p></div>
+            <div class="card glow stagger" style="--i:2"><div class="ico">🤝</div><h3>Моя поддержка</h3><p>Подскажу, что подойдёт именно тебе, и помогу оформить.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 — ШАГ 1 -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Шаг 1</div>
+          <div class="bigstep">
+            <div class="num reveal">1</div>
+            <div class="body">
+              <h3 class="reveal">Открой ссылку</h3>
+              <p class="reveal">Переходишь по моей ссылке <span class="hl">nlstar.com/ref/WEWxBD</span> — и попадаешь в официальный интернет-магазин NL. Регистрироваться заранее не нужно.</p>
+            </div>
+            <div class="ico reveal">🔗</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 — ШАГ 2 -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Шаг 2</div>
+          <div class="bigstep">
+            <div class="num reveal">2</div>
+            <div class="body">
+              <h3 class="reveal">Выбери продукт</h3>
+              <p class="reveal">В каталоге есть <span class="hl">описания, состав и отзывы</span>. Сомневаешься — напиши мне, подберём под твою задачу: питание, уход за кожей, спорт или дом.</p>
+            </div>
+            <div class="ico reveal">🛍️</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 — ШАГ 3 -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Шаг 3</div>
+          <div class="bigstep">
+            <div class="num reveal">3</div>
+            <div class="body">
+              <h3 class="reveal">Оформи заказ</h3>
+              <p class="reveal">Добавляешь товар в корзину и заполняешь <span class="hl">имя, телефон и адрес доставки</span>. Это занимает пару минут — как в любом интернет-магазине.</p>
+            </div>
+            <div class="ico reveal">🛒</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 — ШАГ 4 -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Шаг 4</div>
+          <div class="bigstep">
+            <div class="num reveal">4</div>
+            <div class="body">
+              <h3 class="reveal">Оплата и доставка</h3>
+              <p class="reveal">Оплачиваешь удобным способом — и ждёшь посылку. <span class="hl">Доставка по России и СНГ</span>. Остаёшься со мной на связи по любым вопросам.</p>
+            </div>
+            <div class="ico reveal">📦</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 — ПОМОЩЬ -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Если что-то непонятно</div>
+          <h2 class="title reveal">Не оставлю одного</h2>
+          <ul class="points reveal">
+            <li><span class="mark">✓</span><span><b>Поможешь с выбором?</b> <span class="dim">— да, напиши, что тебя беспокоит, и подберём продукт</span></span></li>
+            <li><span class="mark">✓</span><span><b>Запутался при оформлении?</b> <span class="dim">— проведу по шагам прямо в переписке</span></span></li>
+            <li><span class="mark">✓</span><span><b>Вопрос после покупки?</b> <span class="dim">— всегда на связи, отвечу и подскажу</span></span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 8 — ФИНАЛ / CTA -->
+      <section class="slide closing">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <h2 class="reveal">Готов <span class="accent">попробовать?</span></h2>
+          <div class="cta-buttons reveal">
+            <a class="cta cta-primary" href="https://nlstar.com/ref/WEWxBD/" target="_blank" rel="noopener"><span class="ico">🛒</span><span>Открыть каталог NL<span class="sub">Перейти в магазин по моей ссылке</span></span><span class="arr">→</span></a>
+            <a class="cta cta-ghost" href="https://t.me/Simka1969" target="_blank" rel="noopener"><span class="ico">💬</span><span>Написать мне за помощью<span class="sub">Telegram — помогу выбрать и оформить</span></span><span class="arr">→</span></a>
+          </div>
+          <a class="url reveal" href="https://oleg-nl.netlify.app/" target="_blank" rel="noopener">🔗 oleg-nl.netlify.app</a>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="deck-controls">
+    <button id="prevBtn" aria-label="Назад">‹</button>
+    <span class="counter" id="counter">1 / 8</span>
+    <button id="nextBtn" aria-label="Вперёд">›</button>
+  </div>
+
+  <script>
+    /* Контроллер презентации: масштаб сцены, навигация, прогресс-бар, счётчик. */
+    class SlidePresentation{
+      constructor(){
+        this.slides=Array.from(document.querySelectorAll('.slide'));this.current=0;
+        this.stage=document.getElementById('deckStage');this.bar=document.getElementById('progressBar');this.counter=document.getElementById('counter');
+        this.setupScale();this.setupKeys();this.setupWheel();this.setupTouch();
+        document.getElementById('prevBtn').onclick=()=>this.go(this.current-1);
+        document.getElementById('nextBtn').onclick=()=>this.go(this.current+1);
+        this.show(0);
+      }
+      setupScale(){const scale=()=>{const f=Math.min(innerWidth/1920,innerHeight/1080);
+        this.stage.style.transform=`translate(${(innerWidth-1920*f)/2}px, ${(innerHeight-1080*f)/2}px) scale(${f})`;};scale();addEventListener('resize',scale);}
+      setupKeys(){addEventListener('keydown',e=>{
+        if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();this.go(this.current+1);}
+        else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();this.go(this.current-1);}
+        else if(e.key==='Home'){this.go(0);}else if(e.key==='End'){this.go(this.slides.length-1);}});}
+      setupWheel(){let lock=false;addEventListener('wheel',e=>{if(lock||Math.abs(e.deltaY)<18)return;lock=true;this.go(this.current+(e.deltaY>0?1:-1));setTimeout(()=>lock=false,700);},{passive:true});}
+      setupTouch(){let x0=null;addEventListener('touchstart',e=>{x0=e.touches[0].clientX;},{passive:true});
+        addEventListener('touchend',e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)this.go(this.current+(dx<0?1:-1));x0=null;},{passive:true});}
+      go(i){this.show(Math.max(0,Math.min(i,this.slides.length-1)));}
+      show(i){this.current=i;this.slides.forEach((s,n)=>{s.classList.toggle('active',n===i);s.classList.toggle('visible',n===i);});
+        this.bar.style.width=((i+1)/this.slides.length*100)+'%';this.counter.textContent=(i+1)+' / '+this.slides.length;}
+    }
+    new SlidePresentation();
+  </script>
+</body>
+</html>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Бизнес с NL — презентация для будущих партнёров · Олег Симонов</title>
+  <meta name="description" content="Своё дело с NL International без вложений и рисков. Как это работает, честно о доходе, как начать. Презентация Олега Симонова." />
+  <meta property="og:title" content="Бизнес с NL — без вложений и рисков" />
+  <meta property="og:description" content="Гибкий график, скидка на продукты, обучение и наставник. Честно о том, как устроен бизнес NL." />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===========================================
+       ТЕМА — единая с основной презентацией (бренд).
+       Акцент здесь чуть смещён в золото (премиум, возможность).
+       =========================================== */
+    :root {
+      --bg-0:#061310; --bg-1:#0a201a; --bg-2:#0e2a22;
+      --ink:#f4efe4; --muted:#9db5a8;
+      --emerald:#37dca0; --emerald-dim:#0f766e; --gold:#e3b873;
+      --line:rgba(244,239,228,0.12); --card-line:rgba(55,220,160,0.18);
+      --stage-bg:#04100c; --slide-bg:var(--bg-0);
+      --font-display:'Playfair Display',Georgia,serif;
+      --font-body:'Manrope',-apple-system,sans-serif;
+      --ease:cubic-bezier(0.16,1,0.3,1); --dur:0.7s;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+
+    /* === viewport-base.css (полностью) === */
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg,#000);font-family:var(--font-body);}
+    .deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg,#000);}
+    .deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--slide-bg,#fff);}
+    .slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--slide-bg,#fff);}
+    .slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1;}
+    img,video,canvas,svg{max-width:100%;max-height:100%;}
+    .deck-controls{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000;}
+    @media print{
+      html,body{width:1920px;height:auto;overflow:visible;background:#fff;}
+      .deck-viewport{position:static;overflow:visible;background:#fff;}
+      .deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none;}
+      .slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always;}
+      .slide:last-child{break-after:auto;page-break-after:auto;}
+      .deck-controls,.progress-bar{display:none!important;}
+    }
+    @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.2s!important;}}
+    /* === конец viewport-base.css === */
+
+    .slide{color:var(--ink);
+      background:
+        radial-gradient(1100px 760px at 82% -8%, rgba(227,184,115,0.14), transparent 60%),
+        radial-gradient(900px 700px at 6% 108%, rgba(55,220,160,0.12), transparent 58%),
+        linear-gradient(160deg,#08201a 0%,#061511 55%,#040d0a 100%);}
+    .grain{position:absolute;inset:0;opacity:0.05;pointer-events:none;mix-blend-mode:overlay;z-index:0;}
+    .slide::after{content:'';position:absolute;right:-220px;bottom:-260px;width:720px;height:720px;border-radius:50%;
+      border:1.5px solid rgba(227,184,115,0.14);box-shadow:inset 0 0 120px rgba(227,184,115,0.06);pointer-events:none;}
+
+    .slide-content{position:relative;z-index:1;width:100%;height:100%;padding:104px 132px;display:flex;flex-direction:column;}
+
+    .kicker{font-family:var(--font-body);font-size:22px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:18px;}
+    .kicker::before{content:'';width:56px;height:2px;background:linear-gradient(90deg,var(--gold),transparent);}
+
+    h2.title{font-family:var(--font-display);font-weight:800;font-size:88px;line-height:1.04;margin:26px 0 18px;letter-spacing:0.5px;}
+    h2.title .accent{color:var(--gold);font-style:italic;font-weight:700;}
+    .lead{font-size:31px;line-height:1.5;color:var(--muted);max-width:1180px;font-weight:500;}
+
+    .points{list-style:none;margin-top:40px;display:flex;flex-direction:column;gap:24px;}
+    .points li{display:flex;align-items:flex-start;gap:22px;font-size:30px;line-height:1.4;font-weight:500;}
+    .points li .mark{flex-shrink:0;margin-top:4px;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(227,184,115,0.16);border:1px solid rgba(227,184,115,0.25);color:var(--gold);font-size:22px;font-weight:800;}
+    .points li b{color:var(--ink);font-weight:800;}
+    .points li .dim{color:var(--muted);}
+
+    .chip{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--gold),#c9974f);color:#2a1c06;font-weight:800;font-size:26px;padding:14px 26px;border-radius:999px;text-decoration:none;box-shadow:0 14px 34px rgba(227,184,115,0.24);transition:transform .18s var(--ease),box-shadow .18s var(--ease);}
+    a.chip:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(227,184,115,0.34);}
+
+    .reveal{opacity:0;transform:translateY(34px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease);}
+    .slide.visible .reveal{opacity:1;transform:translateY(0);}
+    .slide.visible .reveal:nth-child(1){transition-delay:.05s;}
+    .slide.visible .reveal:nth-child(2){transition-delay:.15s;}
+    .slide.visible .reveal:nth-child(3){transition-delay:.25s;}
+    .slide.visible .reveal:nth-child(4){transition-delay:.35s;}
+    .slide.visible .reveal:nth-child(5){transition-delay:.45s;}
+    .stagger{opacity:0;transform:translateY(34px) scale(.985);transition:opacity .7s var(--ease),transform .7s var(--ease);transition-delay:calc(var(--i,0)*.08s + .15s);}
+    .slide.visible .stagger{opacity:1;transform:translateY(0) scale(1);}
+
+    /* Титул */
+    .title-slide .slide-content{align-items:center;justify-content:center;text-align:center;padding:80px;}
+    .avatar-ring{width:190px;height:190px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--emerald) 60%,var(--emerald-dim));padding:4px;margin-bottom:32px;box-shadow:0 20px 60px rgba(227,184,115,0.30);}
+    .avatar-ring img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:4px solid #061511;display:block;}
+    .title-slide h1{font-family:var(--font-display);font-weight:900;font-size:124px;line-height:1;letter-spacing:1px;}
+    .title-slide h1 .accent{color:var(--gold);font-style:italic;}
+    .title-slide .role{font-size:30px;font-weight:600;color:var(--gold);letter-spacing:1px;margin-top:14px;}
+    .title-slide .tag{font-size:28px;color:var(--muted);margin-top:22px;max-width:1000px;line-height:1.5;}
+    .anniversary{display:inline-flex;align-items:center;gap:14px;margin-bottom:30px;padding:10px 24px;border-radius:999px;border:1px solid var(--card-line);background:rgba(55,220,160,0.07);font-size:22px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);}
+    .anniversary .dot{width:9px;height:9px;border-radius:50%;background:var(--emerald);box-shadow:0 0 0 5px rgba(55,220,160,0.18);}
+    .scroll-hint{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);font-size:20px;color:var(--muted);letter-spacing:1px;display:flex;align-items:center;gap:10px;}
+    .scroll-hint .arr{animation:bob 1.8s var(--ease) infinite;}
+    @keyframes bob{0%,100%{transform:translateX(0);}50%{transform:translateX(8px);}}
+
+    .grid{display:grid;gap:22px;margin-top:46px;}
+    .grid.cols-2{grid-template-columns:1fr 1fr;}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+    .grid.cols-4{grid-template-columns:repeat(4,1fr);}
+    .card{background:linear-gradient(165deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015));border:1px solid var(--line);border-radius:22px;padding:30px 30px 28px;display:flex;flex-direction:column;gap:12px;}
+    .card .ico{font-size:46px;line-height:1;}
+    .card h3{font-size:28px;font-weight:800;color:var(--ink);}
+    .card p{font-size:21px;line-height:1.45;color:var(--muted);font-weight:500;}
+    .card.glow{border-color:var(--card-line);box-shadow:0 0 0 1px rgba(55,220,160,0.05),0 24px 50px rgba(0,0,0,0.32);}
+
+    .stats{display:flex;gap:30px;margin-top:50px;}
+    .stat{flex:1;background:rgba(255,255,255,0.035);border:1px solid var(--line);border-radius:22px;padding:34px 30px;}
+    .stat .num{font-family:var(--font-display);font-weight:800;font-size:62px;line-height:1;color:var(--gold);}
+    .stat .lbl{font-size:22px;color:var(--muted);margin-top:12px;font-weight:500;}
+
+    .steps{display:flex;gap:26px;margin-top:54px;}
+    .step{flex:1;background:rgba(255,255,255,0.035);border:1px solid var(--line);border-radius:22px;padding:36px 32px;}
+    .step .n{font-family:var(--font-display);font-weight:900;font-size:88px;line-height:.9;color:rgba(227,184,115,0.32);margin-bottom:16px;}
+    .step h3{font-size:28px;font-weight:800;margin-bottom:10px;}
+    .step p{font-size:21px;line-height:1.45;color:var(--muted);font-weight:500;}
+
+    .statement .slide-content{justify-content:center;}
+    .statement .big{font-family:var(--font-display);font-weight:800;font-style:italic;font-size:74px;line-height:1.18;max-width:1500px;}
+    .statement .big .hl{color:var(--gold);}
+    .statement .sub{font-size:28px;color:var(--muted);margin-top:34px;max-width:1220px;line-height:1.5;font-weight:500;}
+
+    /* Мифы и правда */
+    .myth h3{color:var(--muted);font-weight:600;font-size:24px;text-decoration:line-through;text-decoration-color:rgba(157,181,168,0.5);}
+    .myth p{color:var(--ink);font-size:21px;}
+    .myth p b{color:var(--emerald);}
+
+    .cta-buttons{display:flex;flex-direction:column;gap:18px;margin-top:44px;max-width:1000px;}
+    .cta{display:flex;align-items:center;gap:20px;padding:26px 32px;border-radius:18px;text-decoration:none;font-size:28px;font-weight:700;transition:transform .18s,box-shadow .18s;}
+    .cta .ico{font-size:34px;}
+    .cta .arr{margin-left:auto;opacity:0.6;}
+    .cta:hover{transform:translateY(-2px);}
+    .cta .sub{display:block;font-size:18px;font-weight:600;opacity:0.78;}
+    .cta-gold{background:linear-gradient(135deg,var(--gold),#c9974f);color:#2a1c06;box-shadow:0 16px 38px rgba(227,184,115,0.28);}
+    .cta-primary{background:linear-gradient(135deg,var(--emerald),var(--emerald-dim));color:#04130d;box-shadow:0 16px 38px rgba(55,220,160,0.26);}
+    .cta-ghost{background:rgba(255,255,255,0.05);border:1px solid var(--card-line);color:var(--ink);}
+    .cta-ghost .sub{color:var(--muted);}
+
+    .closing .slide-content{align-items:center;justify-content:center;text-align:center;}
+    .closing h2{font-family:var(--font-display);font-weight:900;font-size:104px;line-height:1.02;margin-bottom:16px;}
+    .closing h2 .accent{color:var(--gold);font-style:italic;}
+    .closing .url{display:inline-block;margin-top:36px;font-size:30px;font-weight:700;color:var(--emerald);letter-spacing:1px;text-decoration:none;border-bottom:2px solid transparent;transition:border-color .2s,color .2s;}
+    .closing a.url:hover{color:#5ef0bb;border-bottom-color:var(--emerald);}
+
+    .progress-bar{position:fixed;top:0;left:0;height:4px;width:0%;background:linear-gradient(90deg,var(--gold),var(--emerald));z-index:1001;transition:width .4s var(--ease);}
+    .deck-controls{display:flex;align-items:center;gap:16px;background:rgba(6,19,16,0.7);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:999px;padding:8px 14px;}
+    .deck-controls button{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,0.06);color:var(--ink);font-size:18px;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+    .deck-controls button:hover{background:rgba(227,184,115,0.2);}
+    .deck-controls .counter{font-size:18px;color:var(--muted);font-weight:600;min-width:64px;text-align:center;font-variant-numeric:tabular-nums;}
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="grainf"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter>
+  </svg>
+
+  <div class="progress-bar" id="progressBar"></div>
+
+  <div class="deck-viewport">
+    <main class="deck-stage" id="deckStage">
+
+      <!-- 1 — ТИТУЛ -->
+      <section class="slide title-slide active">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="anniversary reveal"><span class="dot"></span>NL International · более 25 лет</div>
+          <div class="avatar-ring reveal"><img src="foto.jpg" alt="Олег Симонов" /></div>
+          <h1 class="reveal">Бизнес с <span class="accent">NL</span></h1>
+          <div class="role reveal">Олег Симонов · независимый партнёр NL</div>
+          <p class="tag reveal">Своё дело без вложений и рисков —<br/>честно о том, как это работает и с чего начать</p>
+        </div>
+        <div class="scroll-hint">листайте: стрелки · пробел · свайп <span class="arr">→</span></div>
+      </section>
+
+      <!-- 2 — КОМУ ПОДХОДИТ -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Кому это подходит</div>
+          <h2 class="title reveal">Не нужно быть «продажником»</h2>
+          <div class="grid cols-4">
+            <div class="card glow stagger" style="--i:0"><div class="ico">👩‍🍼</div><h3>Мамам в декрете</h3><p>Гибко, из дома, в своём ритме.</p></div>
+            <div class="card glow stagger" style="--i:1"><div class="ico">💼</div><h3>Тем, кто работает</h3><p>Подработка по вечерам и в выходные.</p></div>
+            <div class="card glow stagger" style="--i:2"><div class="ico">🎓</div><h3>Без опыта</h3><p>Всему учим с нуля, наставник рядом.</p></div>
+            <div class="card glow stagger" style="--i:3"><div class="ico">🌿</div><h3>Кто любит продукт</h3><p>Рекомендуешь то, чем пользуешься сам.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 — ЧТО ТАКОЕ БИЗНЕС NL -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Простыми словами</div>
+          <h2 class="title reveal">Что такое бизнес NL</h2>
+          <p class="lead reveal">Ты пользуешься продуктами NL и рекомендуешь их другим. Компания платит за товарооборот — твой и твоей команды. Чем больше людей покупают по твоей рекомендации, тем выше доход.</p>
+          <ul class="points reveal">
+            <li><span class="mark">1</span><span><b>Пользуешься сам</b> <span class="dim">— покупаешь продукты со скидкой партнёра</span></span></li>
+            <li><span class="mark">2</span><span><b>Рекомендуешь</b> <span class="dim">— делишься опытом, помогаешь людям с выбором</span></span></li>
+            <li><span class="mark">3</span><span><b>Развиваешь команду</b> <span class="dim">— приглашаешь тех, кому это тоже интересно</span></span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 4 — ПОЧЕМУ СТОИТ -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">4 причины начать</div>
+          <h2 class="title reveal">Что ты получаешь</h2>
+          <div class="grid cols-4">
+            <div class="card glow stagger" style="--i:0"><div class="ico">🕒</div><h3>Гибкий график</h3><p>Совмещается с работой и семьёй. Ты сам решаешь, сколько уделять.</p></div>
+            <div class="card glow stagger" style="--i:1"><div class="ico">🏷️</div><h3>Скидка 20–30%</h3><p>На все продукты для себя и семьи — выгода ощутима сразу.</p></div>
+            <div class="card glow stagger" style="--i:2"><div class="ico">🆓</div><h3>Без вложений</h3><p>Не нужно выкупать товар вперёд. Старт бесплатный.</p></div>
+            <div class="card glow stagger" style="--i:3"><div class="ico">🤝</div><h3>Обучение и наставник</h3><p>Бесплатное обучение и личная поддержка в первой линии.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 — ЧЕСТНО О ДОХОДЕ -->
+      <section class="slide statement">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal" style="margin-bottom:30px">Честно о доходе</div>
+          <p class="big reveal">Здесь нет «миллиона за месяц».<br/>Есть понятная система: <span class="hl">чем активнее ты — тем больше результат.</span></p>
+          <p class="sub reveal">Большинство партнёров начинают как подработку и растят доход постепенно. Никаких обещаний «лёгких денег» — только реальная работа, продукт, который нравится людям, и поддержка команды.</p>
+        </div>
+      </section>
+
+      <!-- 6 — ИЗ ЧЕГО СКЛАДЫВАЕТСЯ ДОХОД -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Откуда берётся доход</div>
+          <h2 class="title reveal">Три источника</h2>
+          <div class="grid cols-3">
+            <div class="card glow stagger" style="--i:0"><div class="ico">🏷️</div><h3>Личная скидка</h3><p>Экономишь 20–30% на собственных покупках — это уже выгода.</p></div>
+            <div class="card glow stagger" style="--i:1"><div class="ico">📈</div><h3>Бонусы за товарооборот</h3><p>Компания вознаграждает за заказы твоих клиентов.</p></div>
+            <div class="card glow stagger" style="--i:2"><div class="ico">👥</div><h3>Развитие команды</h3><p>Помогаешь расти партнёрам — растёт и твой результат.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 — МИФЫ И ПРАВДА -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Развеем сомнения</div>
+          <h2 class="title reveal">Мифы и правда</h2>
+          <div class="grid cols-3">
+            <div class="card myth glow stagger" style="--i:0"><div class="ico">❌</div><h3>«Это пирамида»</h3><p><b>✅ Правда:</b> есть реальный продукт и своё производство. Доход — за продажи, а не за «вход» людей.</p></div>
+            <div class="card myth glow stagger" style="--i:1"><div class="ico">❌</div><h3>«Нужно всем впаривать»</h3><p><b>✅ Правда:</b> ты просто делишься тем, что нравится. Без навязывания — это не работает и не нужно.</p></div>
+            <div class="card myth glow stagger" style="--i:2"><div class="ico">❌</div><h3>«Нужны вложения»</h3><p><b>✅ Правда:</b> регистрация бесплатна, товар вперёд выкупать не надо. Старт без рисков.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8 — СТАРТ ЗА 3 ШАГА -->
+      <section class="slide">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <div class="kicker reveal">Старт за 3 шага</div>
+          <h2 class="title reveal">Как стать партнёром</h2>
+          <div class="steps">
+            <div class="step stagger" style="--i:0"><div class="n">1</div><h3>Регистрация</h3><p>Бесплатно, по моей ссылке — пара минут.</p></div>
+            <div class="step stagger" style="--i:1"><div class="n">2</div><h3>Первый выбор</h3><p>Берёшь продукты для себя или клиентов со скидкой партнёра.</p></div>
+            <div class="step stagger" style="--i:2"><div class="n">3</div><h3>Обучение</h3><p>Я и команда помогаем сделать первые шаги и не растеряться.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9 — ФИНАЛ / CTA -->
+      <section class="slide closing">
+        <svg class="grain"><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+        <div class="slide-content">
+          <h2 class="reveal">Попробуй — <span class="accent">это бесплатно</span></h2>
+          <div class="cta-buttons reveal">
+            <a class="cta cta-gold" href="https://nlstar.com/ref/cbGX2G/" target="_blank" rel="noopener"><span class="ico">✅</span><span>Зарегистрироваться в мою команду<span class="sub">Стать партнёром в 1 линию — бесплатно</span></span><span class="arr">→</span></a>
+            <a class="cta cta-primary" href="https://nlstore.com/ref/rhhBvA/" target="_blank" rel="noopener"><span class="ico">🚀</span><span>Узнать о бизнесе подробнее<span class="sub">Как зарабатывать с NL — коротко и по делу</span></span><span class="arr">→</span></a>
+            <a class="cta cta-ghost" href="https://t.me/Simka1969" target="_blank" rel="noopener"><span class="ico">💬</span><span>Задать вопрос лично<span class="sub">Напиши мне в Telegram — отвечу и помогу</span></span><span class="arr">→</span></a>
+          </div>
+          <a class="url reveal" href="https://oleg-nl.netlify.app/" target="_blank" rel="noopener">🔗 oleg-nl.netlify.app</a>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="deck-controls">
+    <button id="prevBtn" aria-label="Назад">‹</button>
+    <span class="counter" id="counter">1 / 9</span>
+    <button id="nextBtn" aria-label="Вперёд">›</button>
+  </div>
+
+  <script>
+    /* Контроллер презентации: масштаб сцены 1920×1080, навигация (клавиши,
+       колесо, свайп, кнопки), прогресс-бар и счётчик. */
+    class SlidePresentation {
+      constructor(){
+        this.slides=Array.from(document.querySelectorAll('.slide'));
+        this.current=0;
+        this.stage=document.getElementById('deckStage');
+        this.bar=document.getElementById('progressBar');
+        this.counter=document.getElementById('counter');
+        this.setupScale();this.setupKeys();this.setupWheel();this.setupTouch();
+        document.getElementById('prevBtn').onclick=()=>this.go(this.current-1);
+        document.getElementById('nextBtn').onclick=()=>this.go(this.current+1);
+        this.show(0);
+      }
+      setupScale(){
+        const scale=()=>{const f=Math.min(innerWidth/1920,innerHeight/1080);
+          this.stage.style.transform=`translate(${(innerWidth-1920*f)/2}px, ${(innerHeight-1080*f)/2}px) scale(${f})`;};
+        scale();addEventListener('resize',scale);
+      }
+      setupKeys(){addEventListener('keydown',e=>{
+        if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();this.go(this.current+1);}
+        else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();this.go(this.current-1);}
+        else if(e.key==='Home'){this.go(0);} else if(e.key==='End'){this.go(this.slides.length-1);}
+      });}
+      setupWheel(){let lock=false;addEventListener('wheel',e=>{
+        if(lock||Math.abs(e.deltaY)<18)return;lock=true;this.go(this.current+(e.deltaY>0?1:-1));setTimeout(()=>lock=false,700);
+      },{passive:true});}
+      setupTouch(){let x0=null;
+        addEventListener('touchstart',e=>{x0=e.touches[0].clientX;},{passive:true});
+        addEventListener('touchend',e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0;
+          if(Math.abs(dx)>50)this.go(this.current+(dx<0?1:-1));x0=null;},{passive:true});}
+      go(i){this.show(Math.max(0,Math.min(i,this.slides.length-1)));}
+      show(i){this.current=i;
+        this.slides.forEach((s,n)=>{s.classList.toggle('active',n===i);s.classList.toggle('visible',n===i);});
+        this.bar.style.width=((i+1)/this.slides.length*100)+'%';
+        this.counter.textContent=(i+1)+' / '+this.slides.length;}
+    }
+    new SlidePresentation();
+  </script>
+</body>
+</html>
