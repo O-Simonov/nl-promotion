@@ -74,8 +74,9 @@ cd NL_produkt
 Создать `vk-bot/config.json`:
 ```json
 {
-  "accessToken": "ТОКЕН_VK",
-  "groupId": "ID_ГРУППЫ_БЕЗ_МИНУСА"
+  "botToken": "ТОКЕН_VK",
+  "groupId": 239517960,
+  "apiVersion": "5.199"
 }
 ```
 
