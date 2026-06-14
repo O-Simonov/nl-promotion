@@ -12,7 +12,7 @@ version: 1.0.0
 
 - Пользователь хочет развернуть систему на новом компьютере
 - Нужно добавить новую соцсеть или бота
-- Требуется обновить токен доступа (Meta токены живут ~60 дней)
+- Требуется обновить токен доступа (Meta-токен из Explorer живёт ~1–2 часа — нужно делать бессрочный, см. раздел про токены)
 - Нужно создать новый пост или пакет постов
 - Что-то перестало работать — диагностика
 
@@ -80,13 +80,13 @@ cd NL_produkt
 ```
 
 ### Шаг 4 — Настроить Instagram + Facebook (Meta)
-**Оба бота используют Meta Graph API. Токен живёт ~60 дней — нужно обновлять.**
+**Оба бота используют Meta Graph API. Токен из Explorer живёт ~1–2 часа — обязательно делать БЕССРОЧНЫЙ (см. раздел «Бессрочный токен Meta» ниже).**
 
 1. Зайти на developers.facebook.com → Мои приложения → выбрать приложение
 2. Добавить use case: **"Управляйте всем на своей Странице"** (содержит `pages_manage_posts`)
-3. Открыть Graph API Explorer → выбрать приложение → выбрать Facebook-страницу
-4. Добавить разрешения: `pages_manage_posts`, `instagram_basic`, `instagram_content_publish`
-5. Нажать "Создать токен страницы"
+3. Открыть Graph API Explorer → выбрать приложение
+4. Добавить разрешения: `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `instagram_basic`, `instagram_content_publish`
+5. "Создать токен доступа" → скопировать → **сделать бессрочным** (раздел ниже)
 
 **Instagram Business Account ID** — найти в настройках Instagram → О профессиональном аккаунте.
 
@@ -178,14 +178,19 @@ pwsh -File tg-bot\Make-PostImage.ps1 `
 
 ---
 
-## Обновление токенов Meta (~раз в 60 дней)
+## Бессрочный токен Meta (делается один раз)
 
-1. Зайти на developers.facebook.com → Graph API Explorer
-2. Выбрать приложение и страницу
-3. Добавить разрешения `pages_manage_posts`, `instagram_content_publish`
-4. Нажать "Создать токен страницы"
-5. Обновить `pageToken` в `ig-bot/config.json` и `fb-bot/config.json`
-6. Проверить: `pwsh -File ig-bot\Test-Bot-IG.ps1` и `pwsh -File fb-bot\Test-Bot-FB.ps1`
+⚠️ Токен из Graph API Explorer живёт всего ~1–2 часа. Чтобы IG/FB-боты не падали, нужен БЕССРОЧНЫЙ page-токен:
+
+1. Graph API Explorer (developers.facebook.com/tools/explorer): выбрать приложение, добавить разрешения `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `instagram_basic`, `instagram_content_publish` → «Создать токен доступа» → скопировать (короткий user-токен).
+2. Взять **App ID** и **App Secret**: приложение → Настройки → Базовые.
+3. Обменять на долгоживущий user-токен (открыть в браузере):
+   `https://graph.facebook.com/v25.0/oauth/access_token?grant_type=fb_exchange_token&client_id=APP_ID&client_secret=APP_SECRET&fb_exchange_token=КОРОТКИЙ_ТОКЕН`
+4. Получить бессрочный page-токен:
+   `https://graph.facebook.com/v25.0/me/accounts?access_token=ДОЛГОЖИВУЩИЙ_USER_ТОКЕН` → скопировать `access_token` своей страницы.
+5. Прописать его в `pageToken` в `ig-bot/config.json` и `fb-bot/config.json`.
+6. Проверить срок: `https://graph.facebook.com/v25.0/debug_token?input_token=ТОКЕН&access_token=ТОКЕН` → `expires_at: 0` = бессрочный ✅
+7. Тест: `pwsh -File ig-bot\Test-Bot-IG.ps1` и `pwsh -File fb-bot\Test-Bot-FB.ps1`
 
 ---
 

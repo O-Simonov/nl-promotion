@@ -17,6 +17,21 @@
 
 ---
 
+## ⚠️ Сначала создай config.json в каждой папке
+
+Файлы `config.json` с токенами **НЕ хранятся в репозитории** (они в `.gitignore` ради безопасности). После клонирования в каждой папке бота есть только `config.example.json` — **скопируй его в `config.json`** и впиши свои значения:
+
+```powershell
+Copy-Item tg-bot\config.example.json tg-bot\config.json
+Copy-Item vk-bot\config.example.json vk-bot\config.json
+Copy-Item ig-bot\config.example.json ig-bot\config.json
+Copy-Item fb-bot\config.example.json fb-bot\config.json
+```
+
+Дальше — как получить каждый токен и что вписать.
+
+---
+
 ## 1. Telegram — бот для канала
 
 ### Что нужно
@@ -111,18 +126,39 @@
    - Это добавит разрешения `pages_manage_posts` и `instagram_content_publish`
 3. Нажать **Настроить**
 
-**Получить токен через Graph API Explorer:**
+**Получить токен (Graph API Explorer):**
 1. Открыть: **developers.facebook.com/tools/explorer**
 2. Выбрать своё приложение (правый верхний угол)
-3. Нажать **«Создать токен страницы»** → выбрать свою Facebook страницу
-4. Добавить разрешения:
+3. Добавить разрешения:
+   - `pages_show_list`
+   - `pages_read_engagement`
    - `pages_manage_posts`
    - `instagram_basic`
    - `instagram_content_publish`
-5. Нажать **Создать** → скопировать токен
+4. Нажать **«Создать токен доступа»** → войти и разрешить доступ к Странице и Instagram
+5. Скопировать токен
 
-> ⚠️ **Токен живёт ~60 дней!** После истечения нужно повторить этот шаг.
-> Система пришлёт напоминание в Telegram за 2 дня до истечения.
+> ⚠️ **Это КОРОТКОЖИВУЩИЙ токен — живёт всего ~1–2 часа!** Обязательно сделай его бессрочным (шаг ниже), иначе боты остановятся уже через пару часов. (Раньше мы думали «~60 дней» — это неверно, токен из Explorer умирает за часы.)
+
+**⭐ Сделать токен БЕССРОЧНЫМ (обязательно):**
+
+Понадобятся **App ID** и **App Secret**: developers.facebook.com → твоё приложение → **Настройки → Базовые** (Секрет — кнопка «Показать»).
+
+1. Обменять короткий токен на долгоживущий — открыть в браузере (подставив свои значения):
+   ```
+   https://graph.facebook.com/v25.0/oauth/access_token?grant_type=fb_exchange_token&client_id=APP_ID&client_secret=APP_SECRET&fb_exchange_token=КОРОТКИЙ_ТОКЕН
+   ```
+   Из ответа скопировать `access_token` — это долгоживущий **user-токен**.
+2. Получить **бессрочный токен страницы** — открыть:
+   ```
+   https://graph.facebook.com/v25.0/me/accounts?access_token=ДОЛГОЖИВУЩИЙ_USER_ТОКЕН
+   ```
+   Найти свою страницу → скопировать её `access_token`. Page-токен из долгоживущего user-токена **не истекает**.
+3. Проверить срок — открыть:
+   `https://graph.facebook.com/v25.0/debug_token?input_token=ТОКЕН&access_token=ТОКЕН`
+   Если в ответе `"expires_at": 0` — токен **бессрочный** ✅
+
+Именно **этот** токен страницы вставляется в **оба** конфига (`ig-bot` и `fb-bot`), поле `pageToken`.
 
 **Получить Instagram Business Account ID:**
 1. В Graph API Explorer вставить: `me/accounts` → нажать **Выполнить**
@@ -236,7 +272,7 @@ pwsh -File Check-All-Bots.ps1
 
 | Проблема | Причина | Решение |
 |----------|---------|---------|
-| Instagram/Facebook 400 Bad Request | Токен истёк | Обновить токен в Graph API Explorer |
+| Instagram/Facebook 400/401, "Session has expired" | Токен истёк | Сделать **бессрочный** токен (раздел 3, шаг ⭐). Короткий токен из Explorer живёт всего ~1–2 часа! |
 | Instagram/Facebook 403 Forbidden | Нет разрешения `pages_manage_posts` | Добавить use case в Meta Developer |
 | Картинки не публикуются в IG/FB | Неверный imgbb ключ | Проверить `imgbbApiKey` в конфиге |
 | Netlify: "Deploy directory 'site' does not exist" | Неверный Publish directory | Изменить на `.` в настройках Netlify |
