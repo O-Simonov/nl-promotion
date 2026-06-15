@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+"""Восстановить index.html с обычными <img src="...png"> + лоадером + ретраем на go()."""
+import pathlib
+HTML = pathlib.Path(r"C:\NL_produkt\prezentaciya-proekta\index.html")
+
+tpl = '''<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
@@ -126,3 +130,6 @@
   </script>
 </body>
 </html>
+'''
+HTML.write_text(tpl, encoding="utf-8")
+print(f"HTML restored: {len(tpl)//1024} KB, no base64")
