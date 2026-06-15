@@ -32,3 +32,8 @@ foto_rot.jpg
 
 # Локальные референсные материалы
 Продукция NL/
+
+# Наблюдатель за каналом NL: генерируемые данные (скрипты коммитим, данные — нет)
+news-watch/digest.md
+news-watch/state.json
+news-watch/logs/
