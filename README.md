@@ -2,6 +2,14 @@
 
 Система автопостинга для дистрибьютора NL International. Публикует посты с картинками в Telegram, Facebook, Instagram и ВКонтакте по расписанию без ручного участия.
 
+> 🤝 **Партнёрам NL:** можно поднять свою копию проекта. Пошаговый быстрый старт — в **[PARTNER.md](PARTNER.md)**.
+>
+> Сайт-хаб разворачивается в один клик:
+>
+> [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/O-Simonov/nl-promotion)
+>
+> После клонирования/деплоя запусти `pwsh -File Setup-Partner.ps1` — он подставит во все посты и на сайт **твои** реф-ссылки, имя и соцсети.
+
 ## Что делает проект
 
 - **4 бота** публикуют посты ежедневно в Telegram (10:00), Facebook (11:00), Instagram (12:00), ВКонтакте (14:00)
