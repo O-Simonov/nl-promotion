@@ -1,239 +1,197 @@
 ---
 name: nl-autopost
-description: This skill should be used when the user asks to "настроить автопостинг", "развернуть NL AutoPost", "добавить нового бота", "настроить расписание", "создать пост для NL", "сгенерировать картинку", "обновить токен", or discusses NL International social media automation setup.
+description: Скилл-методичка «как собрать систему автопостинга в 4 соцсети для дистрибьютора NL International с нуля». Содержит пошаговый план, шаблоны скриптов, настройки Windows Task Scheduler, чек-листы безопасности и правила оформления постов. Применяй, когда пользователь хочет поднять свою копию проекта, доработать существующую систему, добавить новую соцсеть или у него упал постинг.
 version: 1.0.0
 ---
 
-# NL AutoPost — Скилл развёртывания
+# NL AutoPost — методичка сборки с нуля
 
-Система автопубликации контента для дистрибьюторов NL International в 4 соцсети: Telegram, Facebook, Instagram, ВКонтакте.
+Полный рецепт: как дистрибьютор NL International (или любой партнёр с похожей задачей) поднимает систему автопостинга в 4 соцсети на PowerShell + Windows Task Scheduler.
 
-## Когда применять этот скилл
+## Когда применять
 
-- Пользователь хочет развернуть систему на новом компьютере
-- Нужно добавить новую соцсеть или бота
-- Требуется обновить токен доступа (Meta-токен из Explorer живёт ~1–2 часа — нужно делать бессрочный, см. раздел про токены)
-- Нужно создать новый пост или пакет постов
-- Что-то перестало работать — диагностика
+- Партнёр NL хочет свою копию автопостинга (клонировал репо → поднял бота за вечер)
+- Сломалось расписание или упал постинг — нужна пошаговая диагностика
+- Добавляем 5-ю соцсеть (YouTube Shorts, TikTok, MAX)
+- Готовим нового партнёра: даём ему методичку, чтобы не задавал 50 вопросов
 
----
+## Что должно получиться на выходе
 
-## Архитектура системы
+Работающая система, которая **каждый день без ручного участия** публикует:
+- 09:00 — автопополнение очереди (если постов ≤ 8)
+- 10:00 — пост в Telegram
+- 11:00 — пост в Facebook
+- 12:00 — пост в Instagram
+- 14:00 — пост в ВКонтакте
+- 08:30 + 20:00 — сбор свежих новостей NL в `digest.md`
+
+## Предусловия (что должно быть на машине)
+
+| Компонент | Зачем | Как поставить |
+|---|---|---|
+| Windows 10/11 | Task Scheduler | уже есть |
+| PowerShell 7+ (`pwsh`) | скрипты, API, JSON | `winget install Microsoft.PowerShell` |
+| Git | клонировать репо | `winget install Git.Git` |
+| Аккаунты в 4 соцсетях | точки публикации | руками |
+| Токены API | доступ к публикации | см. таблицу ниже |
+
+### Где взять токены
+
+| Соцсеть | Где | Срок жизни | Что нужно для продления |
+|---|---|---|---|
+| Telegram | @BotFather → /newbot | бессрочно | ничего |
+| ВКонтакте | vk.com/dev → ключи сообщества | бессрочно, но нужно standalone-приложение | пересоздать |
+| Facebook + Instagram | developers.facebook.com → Graph API → System User | 60 дней (временный) или ∞ (постоянный) | **обязательно** настроить напоминание за 7 дней |
+| ImgBB | api.imgbb.com | бессрочно | бесплатный, безлимит |
+
+**⚠️ Никогда не коммитить токены в Git.** Использовать `config.json` (он в `.gitignore`) или переменные окружения.
+
+## Структура проекта (золотой стандарт)
 
 ```
 NL_produkt/
-├── tg-bot/queue/       ← общая очередь для всех 4 ботов (.txt + .png)
-├── tg-bot/backlog/     ← запас постов (автоматически перекладывается в queue)
-├── tg-bot/             ← Telegram-бот (10:00)
-├── fb-bot/             ← Facebook-бот (11:00)
-├── ig-bot/             ← Instagram-бот (12:00)
-└── vk-bot/             ← ВКонтакте-бот (14:00)
+├── tg-bot/         # Telegram-бот (10:00)
+├── vk-bot/         # ВКонтакте-бот (14:00)
+├── fb-bot/         # Facebook-бот (11:00)
+├── ig-bot/         # Instagram-бот (12:00)
+├── news-watch/     # сборщик новостей (08:30 + 20:00)
+├── Check-Queue-Refill.ps1       # автопополнение очереди (09:00)
+├── Check-All-Bots.ps1           # статус всех ботов одной командой
+├── index.html, biznes.html, prezentaciya.html, kak-zakazat.html  # сайт-хаб
+├── netlify.toml     # publish = ".", команда сборки пустая
+├── БАЗА-ЗНАНИЙ-NL.md           # справочник по продуктам
+├── КОНТЕНТ-ПЛАН-NL.md           # темы постов по рубрикам
+├── PROJECT.md                   # описание проекта (структура: проблема, пользователь, MVP, технологии)
+├── prezentaciya-proekta/        # презентация о самом проекте
+├── README.md                    # инструкция
+├── PARTNER.md                   # быстрый старт для партнёра
+├── SETUP.md                     # полная установка с нуля
+└── Setup-Partner.ps1            # мастер подстановки своих реф-ссылок и соцсетей
 ```
 
-**Ключевой принцип:** все боты читают из `tg-bot/queue/`. Каждый бот перекладывает обработанный файл в свою папку `sent/`. Пост публикуется 4 раза (по одному в каждой соцсети).
+## Шаблоны скриптов (минимальный бот)
 
-**Автопополнение:** задача `NL-Queue-Refill` в 09:00 проверяет — если постов ≤ 8, перекладывает 10 штук из `backlog/` в `queue/`.
+Каждый бот = **3 файла + 1 конфиг**:
 
----
+### 1. `Post-Next-<NETWORK>.ps1` — публикация следующего поста
 
-## Развёртывание с нуля
-
-### Требования
-- Windows 10/11
-- PowerShell 7+ (`winget install Microsoft.PowerShell`)
-- Аккаунты: Telegram, VK, Meta Developer (для Instagram + Facebook)
-- Аккаунт imgbb.com (бесплатный — для хостинга картинок)
-
-### Шаг 1 — Клонировать репозиторий
 ```powershell
-git clone https://github.com/O-Simonov/nl-promotion.git NL_produkt
-cd NL_produkt
-```
+$ErrorActionPreference = 'Stop'
+$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$cfg  = Get-Content (Join-Path $root 'config.json') -Raw | ConvertFrom-Json
 
-### Шаг 2 — Настроить Telegram-бота
-1. Открыть @BotFather → `/newbot` → получить токен вида `123456:ABC-DEF...`
-2. Создать Telegram-канал, назначить бота администратором
-3. Получить ID канала: отправить любое сообщение в канал, потом:
-   ```
-   https://api.telegram.org/bot<TOKEN>/getUpdates
-   ```
-   ID канала будет в поле `channel_post.chat.id` (обычно `-100xxxxxxxxxx`)
+$queueDir = Join-Path $root 'queue'
+$sentDir  = Join-Path $root 'sent'
+$logFile  = Join-Path $root 'logs\post.log'
+New-Item -ItemType Directory -Force -Path $sentDir, (Split-Path $logFile) | Out-Null
+function Log($msg) { "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $msg" |
+                     Tee-Object -FilePath $logFile -Append }
 
-Создать `tg-bot/config.json` (скопировать из `tg-bot/config.example.json`):
-```json
-{
-  "botToken": "ТВОЙ_ТОКЕН_БОТА",
-  "channelId": "-100XXXXXXXXXX"
+# Берём самый ранний пост по имени файла (01-foo.txt, 02-bar.txt, …)
+$post = Get-ChildItem $queueDir -Filter '*.txt' -File | Sort-Object Name | Select -First 1
+if (-not $post) { Log "Очередь пуста."; exit 0 }
+$text = Get-Content $post.FullName -Raw -Encoding UTF8
+$base = [IO.Path]::GetFileNameWithoutExtension($post.Name)
+$img  = Get-ChildItem $queueDir -File | Where-Object { $_.BaseName -eq $base -and $_.Extension -match '\.(jpg|jpeg|png)$' } | Select -First 1
+
+# === API-вызов (псевдокод — реальный код уникален для каждой сети) ===
+# для TG: Invoke-RestMethod -Uri "https://api.telegram.org/bot$($cfg.botToken)/sendPhoto" -Method Post -Form @{chat_id=$cfg.channelId; photo=Get-Item $img.FullName; caption=$text}
+# для VK: POST https://api.vk.com/method/wall.post с photos.upload + wall.post
+# для FB: POST https://graph.facebook.com/v18.0/{page-id}/photos с url=imgbb-url
+# для IG: два шага: POST /media (создать контейнер) → POST /media_publish
+
+# При успехе:
+Log "OK: опубликован '$($post.Name)'. В очереди осталось: $((Get-ChildItem $queueDir -Filter '*.txt').Count - 1)."
+Move-Item $post.FullName $sentDir
+if ($img) { Move-Item $img.FullName $sentDir }
+
+# При ошибке (показать 4 попытки с паузой 30 сек):
+for ($i=1; $i -le 4; $i++) {
+    try { /* API call */ ; break }
+    catch { Log "Попытка $i/4 не удалась: $($_.Exception.Message)"; if ($i -lt 4) { Start-Sleep 30 } }
 }
 ```
 
-### Шаг 3 — Настроить ВКонтакте-бота
-1. Создать сообщество vk.com → Управление → Работа с API → Ключи доступа
-2. Нужны права: `wall`, `photos`, `groups`
+### 2. `Setup-Schedule-<NETWORK>.ps1` — создать задачу
 
-Создать `vk-bot/config.json`:
+```powershell
+param([string]$Time = "10:00")
+$script = Join-Path $PSScriptRoot 'Post-Next-TG.ps1'
+$action  = New-ScheduledTaskAction -Execute 'pwsh' -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$script`""
+$trigger = New-ScheduledTaskTrigger -Daily -At $Time
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -RunOnlyIfNetworkAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
+Register-ScheduledTask -TaskName "NL-Telegram-AutoPost" -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
+```
+
+### 3. `Test-Bot-<NETWORK>.ps1` — проверить доступ
+
+Делает `getMe` / `groups.getById` / `me/accounts` — что-то дешёвое, чтобы убедиться, что токен валиден.
+
+### 4. `config.example.json` — шаблон
+
 ```json
 {
-  "botToken": "ТОКЕН_VK",
-  "groupId": 239517960,
-  "apiVersion": "5.199"
+  "botToken": "ВСТАВЬ_СВОЙ_ТОКЕН",
+  "channelId": "@my_nl_channel"
 }
 ```
 
-### Шаг 4 — Настроить Instagram + Facebook (Meta)
-**Оба бота используют Meta Graph API. Токен из Explorer живёт ~1–2 часа — обязательно делать БЕССРОЧНЫЙ (см. раздел «Бессрочный токен Meta» ниже).**
+> В `config.json` (боевой) лежит реальный токен. Он в `.gitignore`.
 
-1. Зайти на developers.facebook.com → Мои приложения → выбрать приложение
-2. Добавить use case: **"Управляйте всем на своей Странице"** (содержит `pages_manage_posts`)
-3. Открыть Graph API Explorer → выбрать приложение
-4. Добавить разрешения: `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `instagram_basic`, `instagram_content_publish`
-5. "Создать токен доступа" → скопировать → **сделать бессрочным** (раздел ниже)
+## Правила оформления постов
 
-**Instagram Business Account ID** — найти в настройках Instagram → О профессиональном аккаунте.
+| Правило | Зачем |
+|---|---|
+| Имя файла `NN-slug.txt` + `NN-slug.png` | очередь сортируется по имени, картинка привязывается к посту |
+| Текст ≤ 800 символов | влезает во все 4 соцсети без обрезки |
+| Первая строка — заголовок-крючок | это видно в ленте |
+| Реф-ссылка NL в конце | иначе забыл — потерял продажу |
+| Хэштеги: 3–5 штук | больше — выглядит как спам |
+| Картинка 1080×1080 или 1080×1350 | универсально для всех 4 сетей |
 
-Создать `ig-bot/config.json`:
-```json
-{
-  "igUserId": "INSTAGRAM_BUSINESS_ACCOUNT_ID",
-  "pageToken": "ТОКЕН_ИЗ_GRAPH_API_EXPLORER",
-  "imgbbApiKey": "КЛЮЧ_С_IMGBB_COM",
-  "apiVersion": "v25.0"
-}
-```
+## Чек-лист безопасности (для партнёра)
 
-Создать `fb-bot/config.json`:
-```json
-{
-  "pageToken": "ТОКЕН_ИЗ_GRAPH_API_EXPLORER",
-  "pageId": "ID_СТРАНИЦЫ_FACEBOOK",
-  "imgbbApiKey": "КЛЮЧ_С_IMGBB_COM",
-  "apiVersion": "v25.0"
-}
-```
+Перед `git push` убедись:
 
-**imgbb API key:** зарегистрироваться на imgbb.com → Account → API → скопировать ключ.
+- [ ] `config.json` в `.gitignore` (токены не утекут)
+- [ ] `git status` не показывает файлы с токенами
+- [ ] `Setup-Partner.ps1` подставляет только публичные реф-ссылки (не пароль)
+- [ ] Если партнёр прислал пароль — **не сохранять, попросить сменить**
 
-### Шаг 5 — Создать расписание (запустить от администратора)
-```powershell
-pwsh -File tg-bot\Setup-Schedule.ps1
-pwsh -File fb-bot\Setup-Schedule-FB.ps1
-pwsh -File ig-bot\Setup-Schedule-IG.ps1
-pwsh -File vk-bot\Setup-Schedule-VK.ps1
-pwsh -File tg-bot\Check-Queue-Refill.ps1  # создаёт задачу NL-Queue-Refill
-```
+## Диагностика: что делать, если постинг упал
 
-### Шаг 6 — Проверить подключение
-```powershell
-pwsh -File tg-bot\Test-Bot.ps1
-pwsh -File fb-bot\Test-Bot-FB.ps1
-pwsh -File ig-bot\Test-Bot-IG.ps1
-pwsh -File vk-bot\Test-Bot-VK.ps1
-```
+| Симптом | Где смотреть | Что делать |
+|---|---|---|
+| LastResult=1 в планировщике | `*/logs/post.log` | прочитать последние 10 строк |
+| 400 Bad Request (FB/IG) | Meta Graph API | перевыпустить токен, обновить `config.json` |
+| 401 Unauthorized | `config.json` | токен протух, пересоздать |
+| 27 Group authorization failed (VK) | `vk-bot/logs` | нужен standalone-токен сообщества, не пользовательский |
+| Этот хост неизвестен (TG) | сеть/DNS | проверить интернет, иногда помогает VPN |
+| Очередь пуста | `*/queue/` | `Check-Queue-Refill` сам пополнит в 09:00; можно вручную перетащить из `backlog/` |
+| Картинка не прикрепляется | `*.png` битый? | перегенерить через `Make-PostImage.ps1` |
 
-### Шаг 7 — Общая проверка статуса
-```powershell
-pwsh -File Check-All-Bots.ps1
-```
+## Расширение: добавить новую соцсеть
 
----
+1. Создать папку `<net>-bot/`
+2. Скопировать туда 3 скрипта + `config.example.json` из существующего бота
+3. Переписать в `Post-Next-<NETWORK>.ps1` блок API-вызова
+4. Написать `Test-Bot-<NETWORK>.ps1`
+5. Добавить `Setup-Schedule-<NETWORK>.ps1` с нужным временем
+6. Обновить `Check-All-Bots.ps1` (добавить проверку новой сети)
+7. Обновить `README.md` (расписание, токены)
+8. Протестировать: `pwsh -File <net>-bot\Test-Bot-<NETWORK>.ps1`
 
-## Создание новых постов
+## Связанные скиллы проекта
 
-### ⚠️ Пост про конкретный продукт → данные ТОЛЬКО с сайта
+- `nl-price-check` — взять актуальную цену/характеристики с сайта NL перед написанием поста
+- `content-strategy` — спланировать рубрикатор и темы
+- `social` — лучшие практики оформления постов
+- `image` — генерация обложек
 
-Если пост про конкретный товар NL (Energy Diet, коллаген, МетаБуст, чай и т.п.), **цену и характеристики обязательно брать с сайта** через скилл `nl-price-check`, а не из памяти и не из старых постов. Цены и фасовки меняются (пример: ED Smart был «14 порций / 2 796 ₽», стал «15 порций / 2 790 ₽»).
+## Чего НЕ делать (анти-паттерны)
 
-Порядок:
-1. Запустить `nl-price-check` по названию товара → получить «карточку факта»: точное название, **цену** (+ цена за порцию), фасовку, КБЖУ, 2–4 реальных свойства, награды, наличие, артикул.
-2. Построить пост из этих реальных данных по шаблону ниже.
-3. Подставить только подтверждённые значения. Ничего не выдумывать; если поля нет на сайте — не писать.
-4. Цену в посте оформлять единообразно: `💰 Цена: <сумма> ₽` (при наличии фасовки добавить `(N порций = X ₽/порция)`).
-5. Если товара нет в наличии — пост не ставить в очередь (или пометить).
-
-Это касается и обновления старых постов: при ревизии очереди сверять цены/фасовки с сайтом тем же скиллом.
-
-### Формат файла поста
-Файл `NN-название.txt` в `tg-bot/queue/` или `tg-bot/backlog/`:
-```
-Заголовок поста
-
-Текст поста. Можно несколько абзацев.
-
-#тег1 #тег2 #nlинтернэшнл
-🔗 https://referral-link.example.com
-```
-
-Опционально рядом кладётся картинка `NN-название.png` (или `.jpg`).
-
-### Генерация обложки
-```powershell
-pwsh -File tg-bot\Make-PostImage.ps1 `
-  -Title "Заголовок поста" `
-  -Subtitle "Подзаголовок (необязательно)" `
-  -Category slimming `
-  -Out "tg-bot\queue\NN-название.png"
-```
-
-**Категории и их иконки:**
-| Категория | Иконка | Цвет | Применение |
-|-----------|--------|------|-----------|
-| `product` | 🥤 | зелёный | Общие продукты |
-| `business` | 🚀 | синий | Бизнес-возможности |
-| `review` | 💬 | оранжевый | Отзывы |
-| `offer` | 📢 | красный | Акции и предложения |
-| `news` | 🆕 | тёмно-зелёный | Новости |
-| `slimming` | 🔥 | оранжево-красный | Продукты для похудения |
-| `hair` | 💇 | фиолетовый | Уход за волосами |
-| `skincare` | ✨ | розовый | Уход за кожей |
-| `body` | 🧴 | зелёный | Уход за телом |
-| `mens` | 🧔 | тёмно-синий | Мужская линейка |
-| `kids` | 🌟 | янтарный | Детская линейка |
-| `teeth` | 🦷 | голубой | Уход за зубами |
-
----
-
-## Бессрочный токен Meta (делается один раз)
-
-⚠️ Токен из Graph API Explorer живёт всего ~1–2 часа. Чтобы IG/FB-боты не падали, нужен БЕССРОЧНЫЙ page-токен:
-
-1. Graph API Explorer (developers.facebook.com/tools/explorer): выбрать приложение, добавить разрешения `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `instagram_basic`, `instagram_content_publish` → «Создать токен доступа» → скопировать (короткий user-токен).
-2. Взять **App ID** и **App Secret**: приложение → Настройки → Базовые.
-3. Обменять на долгоживущий user-токен (открыть в браузере):
-   `https://graph.facebook.com/v25.0/oauth/access_token?grant_type=fb_exchange_token&client_id=APP_ID&client_secret=APP_SECRET&fb_exchange_token=КОРОТКИЙ_ТОКЕН`
-4. Получить бессрочный page-токен:
-   `https://graph.facebook.com/v25.0/me/accounts?access_token=ДОЛГОЖИВУЩИЙ_USER_ТОКЕН` → скопировать `access_token` своей страницы.
-5. Прописать его в `pageToken` в `ig-bot/config.json` и `fb-bot/config.json`.
-6. Проверить срок: `https://graph.facebook.com/v25.0/debug_token?input_token=ТОКЕН&access_token=ТОКЕН` → `expires_at: 0` = бессрочный ✅
-7. Тест: `pwsh -File ig-bot\Test-Bot-IG.ps1` и `pwsh -File fb-bot\Test-Bot-FB.ps1`
-
----
-
-## Диагностика
-
-### Проверить все задачи разом
-```powershell
-pwsh -File Check-All-Bots.ps1
-```
-Результат 0 = успех. Отличные от 0 коды — смотреть логи в `<бот>/logs/`.
-
-### Запустить бота вручную (без расписания)
-```powershell
-pwsh -File tg-bot\Post-Next.ps1
-pwsh -File fb-bot\Post-Next-FB.ps1
-pwsh -File ig-bot\Post-Next-IG.ps1
-pwsh -File vk-bot\Post-Next-VK.ps1
-```
-
-### Посмотреть статус очереди
-```powershell
-(Get-ChildItem tg-bot\queue -Filter *.txt).Count   # должно быть > 0
-(Get-ChildItem tg-bot\backlog -Filter *.txt).Count  # запас постов
-```
-
-### Типичные ошибки
-| Ошибка | Причина | Решение |
-|--------|---------|---------|
-| 401 Unauthorized | Токен истёк | Обновить токен (шаг выше) |
-| 403 Forbidden | Нет нужного разрешения | Добавить use case в Meta App |
-| Очередь пустая | Backlog закончился | Написать новые посты |
-| Картинка не публикуется в IG/FB | imgbb ключ неверный | Проверить `imgbbApiKey` в конфиге |
+- ❌ Не коммитить `config.json` с токенами
+- ❌ Не ставить расписание на 09:00 / 18:00 / 13:00 ровно — сдвигать на 09:03, 18:07, 13:12 (анти-флад, на случай пересечения с другими партнёрами)
+- ❌ Не публиковать один и тот же пост во все 4 сети одновременно — пусть будет интервал 1–2 часа
+- ❌ Не использовать личный аккаунт для постинга — только страница/сообщество/канал
+- ❌ Не игнорировать ротацию Meta-токена — иначе FB/IG встанут в самый неподходящий момент
