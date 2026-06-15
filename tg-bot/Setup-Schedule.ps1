@@ -16,7 +16,9 @@ if (-not $pwsh) {
 
 $action  = New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$script`""
 $trigger = New-ScheduledTaskTrigger -Daily -At $Time
-$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -RunOnlyIfNetworkAvailable
+# -RestartCount/-RestartInterval: если запуск завершился ошибкой (скрипт вышел с кодом 1
+# после всех внутренних повторов) — планировщик перезапустит задачу до 3 раз с паузой 5 минут.
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -RunOnlyIfNetworkAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
 
 Register-ScheduledTask -TaskName "NL-Telegram-AutoPost" `
     -Action $action -Trigger $trigger -Settings $settings `

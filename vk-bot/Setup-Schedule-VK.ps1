@@ -27,7 +27,9 @@ $action = New-ScheduledTaskAction `
 
 $trigger = New-ScheduledTaskTrigger -Daily -At $time
 $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
-$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+# -RestartCount/-RestartInterval: при сбое запуска (скрипт вышел с кодом 1 после внутренних повторов)
+# планировщик перезапустит задачу до 3 раз с паузой 5 минут.
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
 
 Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings `
     -Description "NL promotion: ежедневно в $time публикует следующий пост из tg-bot/queue в сообщество ВК."
