@@ -1,12 +1,14 @@
-# Setup-Schedule-News.ps1 — ежедневная задача сбора свежих постов NL в дайджест.
-# По умолчанию каждый день в 08:30 (до утренних публикаций).
-# Запускать один раз.
+# Setup-Schedule-News.ps1 — задача сбора свежих постов NL в дайджест.
+# Запускается ДВАЖДЫ в день: утром 08:30 (до утренних публикаций) и вечером 20:00
+# (добрать вечерние новости/события дня). Скрипт дедуплицирует по id поста,
+# поэтому повторный прогон безопасен. Запускать один раз для (пере)регистрации.
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ps1  = Join-Path $root 'Fetch-NL-News.ps1'
 $pwsh = (Get-Command pwsh -ErrorAction SilentlyContinue).Source
-$time = '08:30'
+$timeMorning = '08:30'
+$timeEvening = '20:00'
 $taskName = 'NL-News-Watch'
 
 if (-not $ps1 -or -not (Test-Path $ps1)) { Write-Host "Не найден $ps1"; exit 1 }
@@ -19,14 +21,18 @@ if ($existing) {
 }
 
 $action    = New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -File `"$ps1`"" -WorkingDirectory $root
-$trigger   = New-ScheduledTaskTrigger -Daily -At $time
+# Два ежедневных триггера: утром и вечером
+$triggers  = @(
+    (New-ScheduledTaskTrigger -Daily -At $timeMorning),
+    (New-ScheduledTaskTrigger -Daily -At $timeEvening)
+)
 $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
 # -RestartCount/-RestartInterval: при сбое (выход с кодом 1 после внутренних повторов)
 # планировщик перезапустит задачу до 3 раз с паузой 5 минут.
 $settings  = New-ScheduledTaskSettingsSet -StartWhenAvailable -RunOnlyIfNetworkAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
 
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings `
-    -Description "NL promotion: ежедневно в $time собирает свежие посты канала NL в news-watch/digest.md."
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $triggers -Principal $principal -Settings $settings `
+    -Description "NL promotion: дважды в день ($timeMorning и $timeEvening) собирает свежие посты канала NL в news-watch/digest.md."
 
-Write-Host "✅ Задача '$taskName' создана. Расписание: ежедневно в $time." -ForegroundColor Green
+Write-Host "✅ Задача '$taskName' создана. Расписание: ежедневно в $timeMorning и $timeEvening." -ForegroundColor Green
 Write-Host "Тестовый запуск: pwsh -File `"$ps1`""
