@@ -37,30 +37,46 @@ $imgFile = if (Test-Path $pngPath) { $pngPath } elseif (Test-Path $jpgPath) { $j
 
 Write-Log "Публикую: $($post.Name)$(if ($imgFile) {' + ' + (Split-Path -Leaf $imgFile)} else {' (без картинки)'})"
 
-try {
-    if ($imgFile) {
-        # Загружаем картинку на imgbb
-        Write-Log "Загружаю картинку на imgbb..."
-        $imgBytes  = [System.IO.File]::ReadAllBytes($imgFile)
-        $imgBase64 = [System.Convert]::ToBase64String($imgBytes)
-        $imgbbResp = Invoke-RestMethod -Method Post `
-            -Uri "https://api.imgbb.com/1/upload?key=$imgbbKey" `
-            -Body @{ image = $imgBase64 }
-        $imageUrl = $imgbbResp.data.url
-        Write-Log "Картинка: $imageUrl"
+# --- параметры самопроверки/повтора при сбое ---
+$maxAttempts   = 4   # 1 основная попытка + 3 повтора
+$retryDelaySec = 30  # пауза между попытками
 
-        # Публикуем с фото
-        $r = Invoke-RestMethod -Method Post `
-            -Uri "https://graph.facebook.com/$apiVer/$pageId/photos" `
-            -Body @{ url = $imageUrl; caption = $caption; access_token = $token }
-    } else {
-        # Публикуем текст
-        $r = Invoke-RestMethod -Method Post `
-            -Uri "https://graph.facebook.com/$apiVer/$pageId/feed" `
-            -Body @{ message = $caption; access_token = $token }
+# Публикация (imgbb при наличии фото -> photos/feed) с повтором. Возвращает Post ID.
+# ВАЖНО: финальный вызов публикации — последний шаг; перенос файлов делается ПОСЛЕ успеха,
+# поэтому повтор не приводит к двойной публикации.
+function Invoke-Publish {
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        try {
+            if ($imgFile) {
+                $imgBytes  = [System.IO.File]::ReadAllBytes($imgFile)
+                $imgBase64 = [System.Convert]::ToBase64String($imgBytes)
+                $imgbbResp = Invoke-RestMethod -Method Post -Uri "https://api.imgbb.com/1/upload?key=$imgbbKey" -Body @{ image = $imgBase64 }
+                if (-not $imgbbResp.data.url) { throw "imgbb не вернул URL" }
+                $r = Invoke-RestMethod -Method Post -Uri "https://graph.facebook.com/$apiVer/$pageId/photos" -Body @{
+                    url = $imgbbResp.data.url; caption = $caption; access_token = $token
+                }
+            } else {
+                $r = Invoke-RestMethod -Method Post -Uri "https://graph.facebook.com/$apiVer/$pageId/feed" -Body @{
+                    message = $caption; access_token = $token
+                }
+            }
+            $postId = $r.id ?? $r.post_id
+            if (-not $postId) { throw "нет Post ID в ответе: $($r | ConvertTo-Json -Compress)" }
+            if ($attempt -gt 1) { Write-Log "Успех со $attempt-й попытки." }
+            return $postId
+        }
+        catch {
+            if ($attempt -lt $maxAttempts) {
+                Write-Log "Попытка $attempt/$maxAttempts не удалась: $($_.Exception.Message). Повтор через $retryDelaySec c..."
+                Start-Sleep -Seconds $retryDelaySec
+            } else { throw }
+        }
     }
+}
 
-    Write-Log "УСПЕХ! Post ID: $($r.id ?? $r.post_id)"
+try {
+    $postId = Invoke-Publish
+    Write-Log "УСПЕХ! Post ID: $postId"
 
     # Перемещаем файлы в sent/
     Move-Item -Path $post.FullName -Destination (Join-Path $sentDir $post.Name)
@@ -68,6 +84,6 @@ try {
     Write-Log "Файлы перемещены в sent/"
 
 } catch {
-    Write-Log "ОШИБКА: $($_.Exception.Message)"
+    Write-Log "СБОЙ после $maxAttempts попыток: $($_.Exception.Message)"
     exit 1
 }

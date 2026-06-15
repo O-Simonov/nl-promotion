@@ -39,32 +39,51 @@ $video = Get-ChildItem -Path $queueDir -File |
          Where-Object { $_.BaseName -eq $base -and $_.Extension -match '\.(mp4|mov)$' } |
          Select-Object -First 1
 
-try {
-    if ($video) {
-        $form = @{ chat_id = $channel; caption = $text; video = Get-Item $video.FullName; supports_streaming = 'true' }
-        $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendVideo" -Method Post -Form $form
-    } elseif ($img) {
-        $form = @{ chat_id = $channel; caption = $text; photo = Get-Item $img.FullName }
-        $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendPhoto" -Method Post -Form $form
-    } else {
-        $body = @{ chat_id = $channel; text = $text; disable_web_page_preview = $true }
-        $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendMessage" -Method Post -Body $body
-    }
+# --- параметры самопроверки/повтора при сбое ---
+$maxAttempts   = 4   # 1 основная попытка + 3 повтора
+$retryDelaySec = 30  # пауза между попытками
 
-    if ($resp.ok) {
-        $ts = Get-Date -Format 'yyyyMMdd-HHmmss'
-        Move-Item $post.FullName (Join-Path $sentDir "$ts-$($post.Name)")
-        if ($img)   { Move-Item $img.FullName   (Join-Path $sentDir "$ts-$($img.Name)") }
-        if ($video) { Move-Item $video.FullName (Join-Path $sentDir "$ts-$($video.Name)") }
-        $left = (Get-ChildItem -Path $queueDir -Filter '*.txt' -File | Measure-Object).Count
-        Log "OK: опубликован '$($post.Name)'$(if($video){' (видео)'}elseif($img){' (с фото)'}). В очереди осталось: $left."
-    } else {
-        Log "Ошибка API: $($resp | ConvertTo-Json -Compress)"
-        exit 1
+# Отправка с повтором. Возвращает ответ API при успехе; кидает исключение после всех попыток.
+# ВАЖНО: внутри только сам вызов публикации — перенос файлов делается ПОСЛЕ успеха,
+# поэтому повтор не может привести к двойной публикации.
+function Invoke-Publish {
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        try {
+            if ($video) {
+                $form = @{ chat_id = $channel; caption = $text; video = Get-Item $video.FullName; supports_streaming = 'true' }
+                $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendVideo" -Method Post -Form $form
+            } elseif ($img) {
+                $form = @{ chat_id = $channel; caption = $text; photo = Get-Item $img.FullName }
+                $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendPhoto" -Method Post -Form $form
+            } else {
+                $body = @{ chat_id = $channel; text = $text; disable_web_page_preview = $true }
+                $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendMessage" -Method Post -Body $body
+            }
+            if (-not $resp.ok) { throw "API вернул ok=false: $($resp | ConvertTo-Json -Compress)" }
+            if ($attempt -gt 1) { Log "Успех со $attempt-й попытки." }
+            return $resp
+        }
+        catch {
+            if ($attempt -lt $maxAttempts) {
+                Log "Попытка $attempt/$maxAttempts не удалась: $($_.Exception.Message). Повтор через $retryDelaySec c..."
+                Start-Sleep -Seconds $retryDelaySec
+            } else { throw }
+        }
     }
 }
+
+try {
+    $resp = Invoke-Publish
+
+    $ts = Get-Date -Format 'yyyyMMdd-HHmmss'
+    Move-Item $post.FullName (Join-Path $sentDir "$ts-$($post.Name)")
+    if ($img)   { Move-Item $img.FullName   (Join-Path $sentDir "$ts-$($img.Name)") }
+    if ($video) { Move-Item $video.FullName (Join-Path $sentDir "$ts-$($video.Name)") }
+    $left = (Get-ChildItem -Path $queueDir -Filter '*.txt' -File | Measure-Object).Count
+    Log "OK: опубликован '$($post.Name)'$(if($video){' (видео)'}elseif($img){' (с фото)'}). В очереди осталось: $left."
+}
 catch {
-    Log "Сбой отправки '$($post.Name)': $($_.Exception.Message)"
-    Log "Подсказка: убедись, что бот добавлен в канал как АДМИНИСТРАТОР с правом публикации."
+    Log "СБОЙ после $maxAttempts попыток: '$($post.Name)': $($_.Exception.Message)"
+    Log "Подсказка: проверь сеть/доступ к api.telegram.org и что бот — администратор канала."
     exit 1
 }

@@ -59,63 +59,59 @@ function Vk-Call([string]$method, [hashtable]$params) {
     return $resp.response
 }
 
-try {
-    $attachments = @()
+# --- параметры самопроверки/повтора при сбое ---
+$maxAttempts   = 4   # 1 основная попытка + 3 повтора
+$retryDelaySec = 30  # пауза между попытками
 
-    # Если есть картинка — загружаем через photos.getWallUploadServer
-    if ($img) {
-        Log "Загружаю фото $($img.Name) в ВК..."
-        $uploadInfo = Vk-Call 'photos.getWallUploadServer' @{ group_id = $groupId }
-        $uploadUrl = $uploadInfo.upload_url
+# Полная публикация (загрузка фото + wall.post) с повтором. Возвращает результат wall.post.
+# ВАЖНО: финальный wall.post — последний шаг; перенос файлов делается ПОСЛЕ успеха,
+# поэтому повтор не приводит к двойной публикации (промежуточные шаги идемпотентны).
+function Invoke-Publish {
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        try {
+            $attachments = @()
 
-        $form = @{
-            photo = Get-Item $img.FullName
+            # Если есть картинка — загружаем через photos.getWallUploadServer
+            if ($img) {
+                $uploadInfo = Vk-Call 'photos.getWallUploadServer' @{ group_id = $groupId }
+                $uploadUrl = $uploadInfo.upload_url
+                $uploadResp = Invoke-RestMethod -Uri $uploadUrl -Method Post -Form @{ photo = Get-Item $img.FullName }
+                if ($uploadResp.error) { throw "Upload error: $($uploadResp.error)" }
+                $savedPhotos = Vk-Call 'photos.saveWallPhoto' @{
+                    group_id = $groupId; photo = $uploadResp.photo; server = $uploadResp.server; hash = $uploadResp.hash
+                }
+                foreach ($p in $savedPhotos) { $attachments += "photo$($p.owner_id)_$($p.id)" }
+            }
+
+            # Публикуем пост от имени сообщества
+            $postParams = @{ owner_id = -$groupId; from_group = 1; message = $text }
+            if ($attachments.Count -gt 0) { $postParams['attachments'] = ($attachments -join ',') }
+            $result = Vk-Call 'wall.post' $postParams
+            if (-not $result.post_id) { throw "wall.post без post_id: $($result | ConvertTo-Json -Compress)" }
+            if ($attempt -gt 1) { Log "Успех со $attempt-й попытки." }
+            return $result
         }
-        $uploadResp = Invoke-RestMethod -Uri $uploadUrl -Method Post -Form $form
-
-        if ($uploadResp.error) {
-            throw "Upload error: $($uploadResp.error)"
+        catch {
+            if ($attempt -lt $maxAttempts) {
+                Log "Попытка $attempt/$maxAttempts не удалась: $($_.Exception.Message). Повтор через $retryDelaySec c..."
+                Start-Sleep -Seconds $retryDelaySec
+            } else { throw }
         }
-
-        # Сохраняем фото в группе
-        $saveParams = @{
-            group_id = $groupId
-            photo    = $uploadResp.photo
-            server   = $uploadResp.server
-            hash     = $uploadResp.hash
-        }
-        $savedPhotos = Vk-Call 'photos.saveWallPhoto' $saveParams
-        foreach ($p in $savedPhotos) {
-            $attachments += "photo$($p.owner_id)_$($p.id)"
-        }
-    }
-
-    # Публикуем пост
-    $postParams = @{
-        owner_id     = -$groupId  # минус обязателен — это сообщество
-        from_group   = 1          # публикация от имени сообщества
-        message      = $text
-    }
-    if ($attachments.Count -gt 0) {
-        $postParams['attachments'] = ($attachments -join ',')
-    }
-
-    Log "Публикую '$($post.Name)'..."
-    $result = Vk-Call 'wall.post' $postParams
-
-    if ($result.post_id) {
-        $ts = Get-Date -Format 'yyyyMMdd-HHmmss'
-        Move-Item $post.FullName (Join-Path $sentDir "$ts-$($post.Name)")
-        if ($img) { Move-Item $img.FullName (Join-Path $sentDir "$ts-$($img.Name)") }
-        $left = (Get-ChildItem -Path $queueDir -Filter '*.txt' -File | Measure-Object).Count
-        Log "OK: опубликован '$($post.Name)' (post_id=$($result.post_id)). В очереди осталось: $left."
-    } else {
-        Log "Неожиданный ответ API: $($result | ConvertTo-Json -Compress)"
-        exit 1
     }
 }
+
+try {
+    Log "Публикую '$($post.Name)'..."
+    $result = Invoke-Publish
+
+    $ts = Get-Date -Format 'yyyyMMdd-HHmmss'
+    Move-Item $post.FullName (Join-Path $sentDir "$ts-$($post.Name)")
+    if ($img) { Move-Item $img.FullName (Join-Path $sentDir "$ts-$($img.Name)") }
+    $left = (Get-ChildItem -Path $queueDir -Filter '*.txt' -File | Measure-Object).Count
+    Log "OK: опубликован '$($post.Name)' (post_id=$($result.post_id)). В очереди осталось: $left."
+}
 catch {
-    Log "Сбой публикации '$($post.Name)': $($_.Exception.Message)"
-    Log "Подсказки: (1) токен должен быть от сообщества с правами wall,photos; (2) бот должен быть админом; (3) версия API актуальна."
+    Log "СБОЙ после $maxAttempts попыток: '$($post.Name)': $($_.Exception.Message)"
+    Log "Подсказки: (1) пользовательский токен админа с правами wall,photos; (2) аккаунт — админ сообщества; (3) версия API актуальна."
     exit 1
 }

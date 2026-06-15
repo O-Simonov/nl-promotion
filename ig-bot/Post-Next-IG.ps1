@@ -46,68 +46,59 @@ Write-Log "Публикую пост: $($postFile.Name) + $(Split-Path -Leaf $im
 # Читаем текст поста
 $caption = Get-Content $postFile.FullName -Raw -Encoding UTF8
 
-# 1. Загружаем картинку на imgbb
-Write-Log "Загружаю картинку на imgbb..."
-$imgBytes  = [System.IO.File]::ReadAllBytes($imageFile)
-$imgBase64 = [System.Convert]::ToBase64String($imgBytes)
+# --- параметры самопроверки/повтора при сбое ---
+$maxAttempts   = 4   # 1 основная попытка + 3 повтора
+$retryDelaySec = 30  # пауза между попытками
 
-$imgbbResponse = Invoke-RestMethod `
-    -Method Post `
-    -Uri "https://api.imgbb.com/1/upload?key=$imgbbKey" `
-    -Body @{ image = $imgBase64 }
+# Полная публикация (imgbb -> контейнер -> media_publish) с повтором. Возвращает ответ публикации.
+# ВАЖНО: media_publish — последний шаг; перенос файлов делается ПОСЛЕ успеха,
+# поэтому повтор не приводит к двойной публикации.
+function Invoke-Publish {
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        try {
+            # 1. Загружаем картинку на imgbb
+            $imgBytes  = [System.IO.File]::ReadAllBytes($imageFile)
+            $imgBase64 = [System.Convert]::ToBase64String($imgBytes)
+            $imgbbResponse = Invoke-RestMethod -Method Post -Uri "https://api.imgbb.com/1/upload?key=$imgbbKey" -Body @{ image = $imgBase64 }
+            if (-not $imgbbResponse.data.url) { throw "imgbb не вернул URL" }
+            $imageUrl = $imgbbResponse.data.url
 
-if (-not $imgbbResponse.data.url) {
-    Write-Log "ОШИБКА: imgbb не вернул URL."
-    exit 1
-}
+            # 2. Создаём контейнер в Instagram
+            $containerResponse = Invoke-RestMethod -Method Post -Uri "https://graph.facebook.com/$apiVer/$igId/media" -Body @{
+                image_url = $imageUrl; caption = $caption; access_token = $token
+            }
+            if (-not $containerResponse.id) { throw "не получен id контейнера: $($containerResponse | ConvertTo-Json -Compress)" }
 
-$imageUrl = $imgbbResponse.data.url
-Write-Log "Картинка загружена: $imageUrl"
+            # 3. Пауза — Instagram требует время перед публикацией
+            Start-Sleep -Seconds 10
 
-# 2. Создаём контейнер в Instagram
-Write-Log "Создаю контейнер в Instagram..."
-$containerResponse = Invoke-RestMethod `
-    -Method Post `
-    -Uri "https://graph.facebook.com/$apiVer/$igId/media" `
-    -Body @{
-        image_url  = $imageUrl
-        caption    = $caption
-        access_token = $token
+            # 4. Публикуем контейнер
+            $publishResponse = Invoke-RestMethod -Method Post -Uri "https://graph.facebook.com/$apiVer/$igId/media_publish" -Body @{
+                creation_id = $containerResponse.id; access_token = $token
+            }
+            if (-not $publishResponse.id) { throw "публикация не удалась: $($publishResponse | ConvertTo-Json -Compress)" }
+            if ($attempt -gt 1) { Write-Log "Успех со $attempt-й попытки." }
+            return $publishResponse
+        }
+        catch {
+            if ($attempt -lt $maxAttempts) {
+                Write-Log "Попытка $attempt/$maxAttempts не удалась: $($_.Exception.Message). Повтор через $retryDelaySec c..."
+                Start-Sleep -Seconds $retryDelaySec
+            } else { throw }
+        }
     }
-
-if (-not $containerResponse.id) {
-    Write-Log "ОШИБКА: не получен id контейнера. Ответ: $($containerResponse | ConvertTo-Json)"
-    exit 1
 }
 
-$containerId = $containerResponse.id
-Write-Log "Контейнер создан: $containerId"
+try {
+    $publishResponse = Invoke-Publish
+    Write-Log "УСПЕХ! Пост опубликован. ID: $($publishResponse.id)"
 
-# 3. Ждём — Instagram требует паузу перед публикацией
-Write-Log "Ожидание 10 секунд перед публикацией..."
-Start-Sleep -Seconds 10
-
-# 4. Публикуем контейнер
-Write-Log "Публикую пост..."
-$publishResponse = Invoke-RestMethod `
-    -Method Post `
-    -Uri "https://graph.facebook.com/$apiVer/$igId/media_publish" `
-    -Body @{
-        creation_id  = $containerId
-        access_token = $token
-    }
-
-if (-not $publishResponse.id) {
-    Write-Log "ОШИБКА: публикация не удалась. Ответ: $($publishResponse | ConvertTo-Json)"
+    # Перемещаем файлы в sent/
+    Move-Item -Path $postFile.FullName -Destination (Join-Path $sentDir $postFile.Name)
+    Move-Item -Path $imageFile         -Destination (Join-Path $sentDir (Split-Path -Leaf $imageFile))
+    Write-Log "Файлы перемещены в sent/: $($postFile.Name), $(Split-Path -Leaf $imageFile)"
+}
+catch {
+    Write-Log "СБОЙ после $maxAttempts попыток: $($postFile.Name): $($_.Exception.Message)"
     exit 1
 }
-
-Write-Log "УСПЕХ! Пост опубликован. ID: $($publishResponse.id)"
-
-# 5. Перемещаем файлы в sent/
-$sentTxt = Join-Path $sentDir $postFile.Name
-$sentImg = Join-Path $sentDir (Split-Path -Leaf $imageFile)
-Move-Item -Path $postFile.FullName -Destination $sentTxt
-Move-Item -Path $imageFile         -Destination $sentImg
-
-Write-Log "Файлы перемещены в sent/: $($postFile.Name), $(Split-Path -Leaf $imageFile)"
