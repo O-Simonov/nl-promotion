@@ -1,6 +1,13 @@
 # Instagram автопостинг — следующий пост из очереди с картинкой
 $ErrorActionPreference = "Stop"
 
+# Принудительно включаем TLS 1.2/1.3 для .NET HttpClient. На некоторых провайдерах
+# [Net.ServicePointManager]::SecurityProtocol = SystemDefault приводит к разрыву
+# TLS-хэндшейка (SSL connection could not be established) — например, при DPI или
+# при отсутствии записей SCHANNEL\Protocols в реестре. Явное перечисление
+# протоколов это решает.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+
 $scriptDir  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $configPath = Join-Path $scriptDir "config.json"
 $queueDir   = Join-Path $scriptDir "..\tg-bot\queue"

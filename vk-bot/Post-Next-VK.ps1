@@ -9,6 +9,14 @@
 #   - Если рядом с .txt лежит .png/.jpg — публикуем с фото; иначе — только текст.
 
 $ErrorActionPreference = 'Stop'
+
+# Принудительно включаем TLS 1.2/1.3 для .NET HttpClient. На некоторых провайдерах
+# [Net.ServicePointManager]::SecurityProtocol = SystemDefault приводит к разрыву
+# TLS-хэндшейка (SSL connection could not be established) — например, при DPI или
+# при отсутствии записей SCHANNEL\Protocols в реестре. Явное перечисление
+# протоколов это решает.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # --- читаем конфиг ---
