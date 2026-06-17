@@ -31,6 +31,13 @@ New-Item -ItemType Directory -Force -Path $sentDir, $logDir | Out-Null
 $logFile = Join-Path $logDir 'post.log'
 function Log($msg) { "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $msg" | Tee-Object -FilePath $logFile -Append }
 
+# Сразу пишем в лог: если процесс умрёт «молча» (STATUS_CONTROL_C_EXIT),
+# будет видно, что скрипт вообще стартовал и какая у него среда.
+$swTotal = [System.Diagnostics.Stopwatch]::StartNew()
+Log "=== СТАРТ Post-Next.ps1 (pid=$PID, user=$env:USERNAME) ==="
+Log "SecurityProtocol = $([Net.ServicePointManager]::SecurityProtocol)"
+Log "PowerShell = $($PSVersionTable.PSVersion), OS = $([System.Environment]::OSVersion.VersionString)"
+
 # --- берём самый первый пост по имени (01, 02, ...) ---
 $post = Get-ChildItem -Path $queueDir -Filter '*.txt' -File | Sort-Object Name | Select-Object -First 1
 if (-not $post) { Log "Очередь пуста — постить нечего. Добавь файлы .txt в папку queue."; exit 0 }
@@ -56,16 +63,23 @@ $retryDelaySec = 30  # пауза между попытками
 # поэтому повтор не может привести к двойной публикации.
 function Invoke-Publish {
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        # Глобальный wall-clock: 4 попытки × (20с таймаут + 30с пауза) = ≤170с.
+        # Если что-то пошло совсем не так — сами себя обрежем, чтобы Планировщик
+        # не висел и не убивал процесс на STATUS_CONTROL_C_EXIT.
+        if ($swTotal.Elapsed.TotalSeconds -gt 150) { throw "Глобальный таймаут 150с — прерываю, чтобы Планировщик не убил" }
         try {
             if ($video) {
+                Log "→ POST https://api.telegram.org/bot…/sendVideo (попытка $attempt/$maxAttempts)"
                 $form = @{ chat_id = $channel; caption = $text; video = Get-Item $video.FullName; supports_streaming = 'true' }
-                $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendVideo" -Method Post -Form $form
+                $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendVideo" -Method Post -Form $form -TimeoutSec 20
             } elseif ($img) {
+                Log "→ POST https://api.telegram.org/bot…/sendPhoto (попытка $attempt/$maxAttempts)"
                 $form = @{ chat_id = $channel; caption = $text; photo = Get-Item $img.FullName }
-                $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendPhoto" -Method Post -Form $form
+                $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendPhoto" -Method Post -Form $form -TimeoutSec 20
             } else {
+                Log "→ POST https://api.telegram.org/bot…/sendMessage (попытка $attempt/$maxAttempts)"
                 $body = @{ chat_id = $channel; text = $text; disable_web_page_preview = $true }
-                $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendMessage" -Method Post -Body $body
+                $resp = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/sendMessage" -Method Post -Body $body -TimeoutSec 20
             }
             if (-not $resp.ok) { throw "API вернул ok=false: $($resp | ConvertTo-Json -Compress)" }
             if ($attempt -gt 1) { Log "Успех со $attempt-й попытки." }
@@ -81,6 +95,17 @@ function Invoke-Publish {
 }
 
 try {
+    # --- smoke-test: быстрый GET к API (5с). Если сеть лежит — не мучаем 4×20с. ---
+    Log "→ smoke-test https://api.telegram.org/"
+    try {
+        $null = Invoke-RestMethod -Uri "https://api.telegram.org/bot$token/getMe" -Method Get -TimeoutSec 5
+    } catch {
+        $errText = if ($_.Exception.InnerException) { $_.Exception.InnerException.Message } else { $_.Exception.Message }
+        Log "❌ СЕТЬ НЕДОСТУПНА: $errText — пропускаю пост (он остаётся в очереди)"
+        Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с ==="
+        exit 0
+    }
+
     $resp = Invoke-Publish
 
     $ts = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -89,9 +114,11 @@ try {
     if ($video) { Move-Item $video.FullName (Join-Path $sentDir "$ts-$($video.Name)") }
     $left = (Get-ChildItem -Path $queueDir -Filter '*.txt' -File | Measure-Object).Count
     Log "OK: опубликован '$($post.Name)'$(if($video){' (видео)'}elseif($img){' (с фото)'}). В очереди осталось: $left."
+    Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с (ОК) ==="
 }
 catch {
     Log "СБОЙ после $maxAttempts попыток: '$($post.Name)': $($_.Exception.Message)"
     Log "Подсказка: проверь сеть/доступ к api.telegram.org и что бот — администратор канала."
+    Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с ==="
     exit 1
 }

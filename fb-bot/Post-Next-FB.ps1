@@ -23,6 +23,13 @@ function Write-Log($msg) {
     Add-Content -Path $logFile -Value $line
 }
 
+# Сразу пишем в лог: если процесс умрёт «молча» (STATUS_CONTROL_C_EXIT),
+# будет видно, что скрипт вообще стартовал и какая у него среда.
+$swTotal = [System.Diagnostics.Stopwatch]::StartNew()
+Write-Log "=== СТАРТ Post-Next-FB.ps1 (pid=$PID, user=$env:USERNAME) ==="
+Write-Log "SecurityProtocol = $([Net.ServicePointManager]::SecurityProtocol)"
+Write-Log "PowerShell = $($PSVersionTable.PSVersion), OS = $([System.Environment]::OSVersion.VersionString)"
+
 $cfg      = Get-Content $configPath | ConvertFrom-Json
 $token    = $cfg.pageToken
 $pageId   = $cfg.pageId
@@ -53,19 +60,26 @@ $retryDelaySec = 30  # пауза между попытками
 # поэтому повтор не приводит к двойной публикации.
 function Invoke-Publish {
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        # Глобальный wall-clock: 4 попытки × (20с таймаут + 30с пауза) = ≤170с.
+        # Если что-то пошло совсем не так — сами себя обрежем, чтобы Планировщик
+        # не висел и не убивал процесс на STATUS_CONTROL_C_EXIT.
+        if ($swTotal.Elapsed.TotalSeconds -gt 150) { throw "Глобальный таймаут 150с — прерываю, чтобы Планировщик не убил" }
         try {
             if ($imgFile) {
+                Write-Log "→ POST api.imgbb.com/1/upload (попытка $attempt/$maxAttempts)"
                 $imgBytes  = [System.IO.File]::ReadAllBytes($imgFile)
                 $imgBase64 = [System.Convert]::ToBase64String($imgBytes)
-                $imgbbResp = Invoke-RestMethod -Method Post -Uri "https://api.imgbb.com/1/upload?key=$imgbbKey" -Body @{ image = $imgBase64 }
+                $imgbbResp = Invoke-RestMethod -Method Post -Uri "https://api.imgbb.com/1/upload?key=$imgbbKey" -Body @{ image = $imgBase64 } -TimeoutSec 20
                 if (-not $imgbbResp.data.url) { throw "imgbb не вернул URL" }
+                Write-Log "→ POST graph.facebook.com/$apiVer/$pageId/photos (попытка $attempt/$maxAttempts)"
                 $r = Invoke-RestMethod -Method Post -Uri "https://graph.facebook.com/$apiVer/$pageId/photos" -Body @{
                     url = $imgbbResp.data.url; caption = $caption; access_token = $token
-                }
+                } -TimeoutSec 20
             } else {
+                Write-Log "→ POST graph.facebook.com/$apiVer/$pageId/feed (попытка $attempt/$maxAttempts)"
                 $r = Invoke-RestMethod -Method Post -Uri "https://graph.facebook.com/$apiVer/$pageId/feed" -Body @{
                     message = $caption; access_token = $token
-                }
+                } -TimeoutSec 20
             }
             $postId = $r.id ?? $r.post_id
             if (-not $postId) { throw "нет Post ID в ответе: $($r | ConvertTo-Json -Compress)" }
@@ -82,6 +96,17 @@ function Invoke-Publish {
 }
 
 try {
+    # --- smoke-test: быстрый GET к Graph API (5с). Если сеть лежит — не мучаем 4×20с. ---
+    Write-Log "→ smoke-test graph.facebook.com"
+    try {
+        $null = Invoke-RestMethod -Uri "https://graph.facebook.com/$apiVersion/$pageId?fields=id&access_token=$token" -TimeoutSec 5
+    } catch {
+        $errText = if ($_.Exception.InnerException) { $_.Exception.InnerException.Message } else { $_.Exception.Message }
+        Write-Log "❌ СЕТЬ НЕДОСТУПНА: $errText — пропускаю пост (он остаётся в очереди)"
+        Write-Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с ==="
+        exit 0
+    }
+
     $postId = Invoke-Publish
     Write-Log "УСПЕХ! Post ID: $postId"
 
@@ -89,8 +114,10 @@ try {
     Move-Item -Path $post.FullName -Destination (Join-Path $sentDir $post.Name)
     if ($imgFile) { Move-Item -Path $imgFile -Destination (Join-Path $sentDir (Split-Path -Leaf $imgFile)) }
     Write-Log "Файлы перемещены в sent/"
+    Write-Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с (ОК) ==="
 
 } catch {
     Write-Log "СБОЙ после $maxAttempts попыток: $($_.Exception.Message)"
+    Write-Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с (FAIL) ==="
     exit 1
 }

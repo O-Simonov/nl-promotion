@@ -23,6 +23,13 @@ function Write-Log($msg) {
     Add-Content -Path $logFile -Value $line
 }
 
+# Сразу пишем в лог: если процесс умрёт «молча» (STATUS_CONTROL_C_EXIT),
+# будет видно, что скрипт вообще стартовал и какая у него среда.
+$swTotal = [System.Diagnostics.Stopwatch]::StartNew()
+Write-Log "=== СТАРТ Post-Next-IG.ps1 (pid=$PID, user=$env:USERNAME) ==="
+Write-Log "SecurityProtocol = $([Net.ServicePointManager]::SecurityProtocol)"
+Write-Log "PowerShell = $($PSVersionTable.PSVersion), OS = $([System.Environment]::OSVersion.VersionString)"
+
 $cfg       = Get-Content $configPath | ConvertFrom-Json
 $token     = $cfg.pageToken
 $igId      = $cfg.igUserId
@@ -62,27 +69,34 @@ $retryDelaySec = 30  # пауза между попытками
 # поэтому повтор не приводит к двойной публикации.
 function Invoke-Publish {
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        # Глобальный wall-clock: 4 попытки × (20с таймаут + 30с пауза) = ≤170с.
+        # Если что-то пошло совсем не так — сами себя обрежем, чтобы Планировщик
+        # не висел и не убивал процесс на STATUS_CONTROL_C_EXIT.
+        if ($swTotal.Elapsed.TotalSeconds -gt 150) { throw "Глобальный таймаут 150с — прерываю, чтобы Планировщик не убил" }
         try {
             # 1. Загружаем картинку на imgbb
+            Write-Log "→ POST api.imgbb.com/1/upload (попытка $attempt/$maxAttempts)"
             $imgBytes  = [System.IO.File]::ReadAllBytes($imageFile)
             $imgBase64 = [System.Convert]::ToBase64String($imgBytes)
-            $imgbbResponse = Invoke-RestMethod -Method Post -Uri "https://api.imgbb.com/1/upload?key=$imgbbKey" -Body @{ image = $imgBase64 }
+            $imgbbResponse = Invoke-RestMethod -Method Post -Uri "https://api.imgbb.com/1/upload?key=$imgbbKey" -Body @{ image = $imgBase64 } -TimeoutSec 20
             if (-not $imgbbResponse.data.url) { throw "imgbb не вернул URL" }
             $imageUrl = $imgbbResponse.data.url
 
             # 2. Создаём контейнер в Instagram
+            Write-Log "→ POST graph.facebook.com/$apiVer/$igId/media (попытка $attempt/$maxAttempts)"
             $containerResponse = Invoke-RestMethod -Method Post -Uri "https://graph.facebook.com/$apiVer/$igId/media" -Body @{
                 image_url = $imageUrl; caption = $caption; access_token = $token
-            }
+            } -TimeoutSec 20
             if (-not $containerResponse.id) { throw "не получен id контейнера: $($containerResponse | ConvertTo-Json -Compress)" }
 
             # 3. Пауза — Instagram требует время перед публикацией
             Start-Sleep -Seconds 10
 
             # 4. Публикуем контейнер
+            Write-Log "→ POST graph.facebook.com/$apiVer/$igId/media_publish (попытка $attempt/$maxAttempts)"
             $publishResponse = Invoke-RestMethod -Method Post -Uri "https://graph.facebook.com/$apiVer/$igId/media_publish" -Body @{
                 creation_id = $containerResponse.id; access_token = $token
-            }
+            } -TimeoutSec 20
             if (-not $publishResponse.id) { throw "публикация не удалась: $($publishResponse | ConvertTo-Json -Compress)" }
             if ($attempt -gt 1) { Write-Log "Успех со $attempt-й попытки." }
             return $publishResponse
@@ -97,6 +111,17 @@ function Invoke-Publish {
 }
 
 try {
+    # --- smoke-test: быстрый GET к Graph API (5с). Если сеть лежит — не мучаем 4×20с. ---
+    Write-Log "→ smoke-test graph.facebook.com"
+    try {
+        $null = Invoke-RestMethod -Uri "https://graph.facebook.com/$apiVer/$igId?fields=id&access_token=$token" -TimeoutSec 5
+    } catch {
+        $errText = if ($_.Exception.InnerException) { $_.Exception.InnerException.Message } else { $_.Exception.Message }
+        Write-Log "❌ СЕТЬ НЕДОСТУПНА: $errText — пропускаю пост (он остаётся в очереди)"
+        Write-Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с ==="
+        exit 0
+    }
+
     $publishResponse = Invoke-Publish
     Write-Log "УСПЕХ! Пост опубликован. ID: $($publishResponse.id)"
 
@@ -104,8 +129,10 @@ try {
     Move-Item -Path $postFile.FullName -Destination (Join-Path $sentDir $postFile.Name)
     Move-Item -Path $imageFile         -Destination (Join-Path $sentDir (Split-Path -Leaf $imageFile))
     Write-Log "Файлы перемещены в sent/: $($postFile.Name), $(Split-Path -Leaf $imageFile)"
+    Write-Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с (ОК) ==="
 }
 catch {
     Write-Log "СБОЙ после $maxAttempts попыток: $($postFile.Name): $($_.Exception.Message)"
+    Write-Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с (FAIL) ==="
     exit 1
 }

@@ -40,6 +40,13 @@ New-Item -ItemType Directory -Force -Path $sentDir, $logDir | Out-Null
 $logFile = Join-Path $logDir 'post.log'
 function Log($msg) { "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $msg" | Tee-Object -FilePath $logFile -Append }
 
+# Сразу пишем в лог: если процесс умрёт «молча» (STATUS_CONTROL_C_EXIT),
+# будет видно, что скрипт вообще стартовал и какая у него среда.
+$swTotal = [System.Diagnostics.Stopwatch]::StartNew()
+Log "=== СТАРТ Post-Next-VK.ps1 (pid=$PID, user=$env:USERNAME) ==="
+Log "SecurityProtocol = $([Net.ServicePointManager]::SecurityProtocol)"
+Log "PowerShell = $($PSVersionTable.PSVersion), OS = $([System.Environment]::OSVersion.VersionString)"
+
 # --- берём самый первый пост по имени ---
 $post = Get-ChildItem -Path $queueDir -Filter '*.txt' -File | Sort-Object Name | Select-Object -First 1
 if (-not $post) { Log "Очередь пуста — постить нечего. Добавь файлы .txt в папку queue."; exit 0 }
@@ -60,7 +67,8 @@ function Vk-Call([string]$method, [hashtable]$params) {
     $body = ($params.GetEnumerator() | ForEach-Object {
         "$($_.Key)=$([System.Web.HttpUtility]::UrlEncode($_.Value))"
     }) -join '&'
-    $resp = Invoke-RestMethod -Uri $uri -Method Post -Body $body -ContentType 'application/x-www-form-urlencoded'
+    Log "→ POST $uri ($method)"
+    $resp = Invoke-RestMethod -Uri $uri -Method Post -Body $body -ContentType 'application/x-www-form-urlencoded' -TimeoutSec 20
     if ($resp.error) {
         throw "VK API error: $($resp.error.error_code) $($resp.error.error_msg)"
     }
@@ -76,6 +84,10 @@ $retryDelaySec = 30  # пауза между попытками
 # поэтому повтор не приводит к двойной публикации (промежуточные шаги идемпотентны).
 function Invoke-Publish {
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        # Глобальный wall-clock: 4 попытки × (20с таймаут + 30с пауза) = ≤170с.
+        # Если что-то пошло совсем не так — сами себя обрежем, чтобы Планировщик
+        # не висел и не убивал процесс на STATUS_CONTROL_C_EXIT.
+        if ($swTotal.Elapsed.TotalSeconds -gt 150) { throw "Глобальный таймаут 150с — прерываю, чтобы Планировщик не убил" }
         try {
             $attachments = @()
 
@@ -83,7 +95,8 @@ function Invoke-Publish {
             if ($img) {
                 $uploadInfo = Vk-Call 'photos.getWallUploadServer' @{ group_id = $groupId }
                 $uploadUrl = $uploadInfo.upload_url
-                $uploadResp = Invoke-RestMethod -Uri $uploadUrl -Method Post -Form @{ photo = Get-Item $img.FullName }
+                Log "→ POST $uploadUrl (upload-фото)"
+                $uploadResp = Invoke-RestMethod -Uri $uploadUrl -Method Post -Form @{ photo = Get-Item $img.FullName } -TimeoutSec 20
                 if ($uploadResp.error) { throw "Upload error: $($uploadResp.error)" }
                 $savedPhotos = Vk-Call 'photos.saveWallPhoto' @{
                     group_id = $groupId; photo = $uploadResp.photo; server = $uploadResp.server; hash = $uploadResp.hash
@@ -109,6 +122,17 @@ function Invoke-Publish {
 }
 
 try {
+    # --- smoke-test: быстрый GET к API VK (5с). Если сеть лежит — не мучаем 4×20с. ---
+    Log "→ smoke-test api.vk.com"
+    try {
+        $null = Invoke-RestMethod -Uri "https://api.vk.com/method/utils.getServerTime?v=$apiVer&access_token=$token" -TimeoutSec 5
+    } catch {
+        $errText = if ($_.Exception.InnerException) { $_.Exception.InnerException.Message } else { $_.Exception.Message }
+        Log "❌ СЕТЬ НЕДОСТУПНА: $errText — пропускаю пост (он остаётся в очереди)"
+        Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с ==="
+        exit 0
+    }
+
     Log "Публикую '$($post.Name)'..."
     $result = Invoke-Publish
 
@@ -117,9 +141,11 @@ try {
     if ($img) { Move-Item $img.FullName (Join-Path $sentDir "$ts-$($img.Name)") }
     $left = (Get-ChildItem -Path $queueDir -Filter '*.txt' -File | Measure-Object).Count
     Log "OK: опубликован '$($post.Name)' (post_id=$($result.post_id)). В очереди осталось: $left."
+    Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с (ОК) ==="
 }
 catch {
     Log "СБОЙ после $maxAttempts попыток: '$($post.Name)': $($_.Exception.Message)"
     Log "Подсказки: (1) пользовательский токен админа с правами wall,photos; (2) аккаунт — админ сообщества; (3) версия API актуальна."
+    Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с (FAIL) ==="
     exit 1
 }
