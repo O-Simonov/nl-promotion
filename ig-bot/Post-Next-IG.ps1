@@ -114,7 +114,9 @@ try {
     # --- smoke-test: быстрый GET к Graph API (5с). Если сеть лежит — не мучаем 4×20с. ---
     Write-Log "→ smoke-test graph.facebook.com"
     try {
-        $null = Invoke-RestMethod -Uri "https://graph.facebook.com/$apiVer/$igId?fields=id&access_token=$token" -TimeoutSec 5
+        # ВАЖНО: `? экранирует '?' — иначе PowerShell «съедает» $igId и fields,
+        # URI ломается (…/v25.0/=id&access_token=…) и Graph API всегда отвечает 400.
+        $null = Invoke-RestMethod -Uri "https://graph.facebook.com/$apiVer/$igId`?fields=id&access_token=$token" -TimeoutSec 5
     } catch {
         $errText = if ($_.Exception.InnerException) { $_.Exception.InnerException.Message } else { $_.Exception.Message }
         Write-Log "❌ СЕТЬ НЕДОСТУПНА: $errText — пропускаю пост (он остаётся в очереди)"
@@ -130,9 +132,35 @@ try {
     Move-Item -Path $imageFile         -Destination (Join-Path $sentDir (Split-Path -Leaf $imageFile))
     Write-Log "Файлы перемещены в sent/: $($postFile.Name), $(Split-Path -Leaf $imageFile)"
     Write-Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с (ОК) ==="
+
+    # Сброс счётчика ошибок Meta при успехе
+    $errCounter = Join-Path $scriptDir "logs\meta-error-count.txt"
+    if (Test-Path $errCounter) { Remove-Item $errCounter -Force }
+
 }
 catch {
-    Write-Log "СБОЙ после $maxAttempts попыток: $($postFile.Name): $($_.Exception.Message)"
+    $errMsg = $_.Exception.Message
+    Write-Log "СБОЙ после $maxAttempts попыток: $errMsg"
     Write-Log "=== СТОП $([int]$swTotal.Elapsed.TotalSeconds)с (FAIL) ==="
+
+    # Считаем подряд идущие ошибки Meta (400, checkpoint и т.п.)
+    $errCounter = Join-Path $scriptDir "logs\meta-error-count.txt"
+    $count = 0
+    if (Test-Path $errCounter) { [int]$count = (Get-Content $errCounter -Raw).Trim() }
+    $count++
+    Set-Content -Path $errCounter -Value $count
+
+    # Если 3-й сбой подряд — уведомляем Олега в TG-канал (НЕ падаем, если Notify не сработал)
+    if ($count -ge 3) {
+        try {
+            $notifyScript = Join-Path $PSScriptRoot "..\Notify-Owner.ps1"
+            if (Test-Path $notifyScript) {
+                & pwsh -NoProfile -ExecutionPolicy Bypass -File $notifyScript `
+                    -Message "⚠️ <b>IG-бот</b> упал <b>$count раз подряд</b>.%0A%0AПоследняя ошибка:%0A<code>$([System.Web.HttpUtility]::HtmlEncode($errMsg))</code>%0A%0AСкорее всего, Meta-токен в checkpoint (subcode 459). Зайди в <b>facebook.com</b>, пройди проверку, потом скажи мне — я разгребу очередь."
+                Write-Log "🚨 Уведомление отправлено (ошибка #$count)"
+            }
+        } catch { Write-Log "⚠️ Не удалось отправить уведомление: $($_.Exception.Message)" }
+    }
+
     exit 1
 }
