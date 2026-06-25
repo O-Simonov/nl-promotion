@@ -7,6 +7,9 @@ fb-bot/config.json
 # Временный файл при обновлении Meta-токена (никогда не коммитить!)
 meta-token.txt
 
+# Конфиг личных уведомлений в Telegram (бот напоминаний) — не коммитить
+notify.config.json
+
 # Логи и отправленные посты
 tg-bot/logs/
 tg-bot/sent/
