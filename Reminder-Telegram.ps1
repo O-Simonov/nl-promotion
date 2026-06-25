@@ -42,7 +42,7 @@ $b = (Get-ChildItem (Join-Path $root2 'backlog') -Filter *.txt -File -ErrorActio
 $lines += ""
 $lines += "📦 Очередь: $q | Бэклог: $b (запас ~$([math]::Round(($q+$b)/4)) дн.)"
 
-$msg = "🔔 <b>Напоминание: проверка ботов NL</b>%0AДата: $today%0A%0A" + ($lines -join "%0A")
+$msg = "📊 <b>Ежедневная сводка: автопостинг NL</b>%0A$today%0A%0A" + ($lines -join "%0A")
 $msg += "%0A%0AЕсли что-то ❌ — открой Claude Code в C:\NL_produkt и скажи «проверь ботов»."
 
 $url  = "https://api.telegram.org/bot$token/sendMessage"
