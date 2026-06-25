@@ -16,6 +16,7 @@ ig-bot/logs/
 ig-bot/sent/
 fb-bot/logs/
 fb-bot/sent/
+promotion/logs/
 
 # Локальные настройки Claude Code (не трогать skills/)
 .claude/settings.local.json
