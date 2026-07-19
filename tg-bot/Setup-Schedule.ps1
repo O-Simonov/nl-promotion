@@ -14,15 +14,18 @@ if (-not $pwsh) {
     exit 1
 }
 
-$action  = New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$script`""
+$action  = New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$script`"" -WorkingDirectory $root
 $trigger = New-ScheduledTaskTrigger -Daily -At $Time
-# -RestartCount/-RestartInterval: если запуск завершился ошибкой (скрипт вышел с кодом 1
-# после всех внутренних повторов) — планировщик перезапустит задачу до 3 раз с паузой 5 минут.
-$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -RunOnlyIfNetworkAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
+# Interactive: нужен вход пользователя (RDP/консоль). StartWhenAvailable+WakeToRun —
+# чтобы не терять воскресный/утренний слот, если сессия поднялась позже.
+$principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+    -WakeToRun -RunOnlyIfNetworkAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5) `
+    -ExecutionTimeLimit (New-TimeSpan -Hours 1) -MultipleInstances IgnoreNew
 
 Register-ScheduledTask -TaskName "NL-Telegram-AutoPost" `
-    -Action $action -Trigger $trigger -Settings $settings `
-    -Description "Ежедневный автопостинг NL в Telegram" -Force | Out-Null
+    -Action $action -Trigger $trigger -Principal $principal -Settings $settings `
+    -Description "Ежедневный автопостинг NL в Telegram (StartWhenAvailable+WakeToRun)" -Force | Out-Null
 
 Write-Host "✅ Готово! Задача 'NL-Telegram-AutoPost' создана."
 Write-Host "   Бот будет публиковать по одному посту каждый день в $Time."

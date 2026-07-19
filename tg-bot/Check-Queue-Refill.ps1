@@ -5,8 +5,28 @@ $root       = Split-Path -Parent $MyInvocation.MyCommand.Path
 $queueDir   = Join-Path $root 'queue'
 $backlogDir = Join-Path $root 'backlog'
 $logFile    = Join-Path $root 'logs\refill.log'
+$lockFile   = Join-Path $root 'logs\.refill.lock'
 
 New-Item -ItemType Directory -Force -Path (Join-Path $root 'logs') | Out-Null
+
+# --- single-instance: защита от двойного запуска (Task Scheduler + ручной запуск).
+# Если lock-файл уже есть и процесс-владелец жив — выходим с кодом 0.
+if (Test-Path $lockFile) {
+    $stale = $false
+    try {
+        $ownerPid = (Get-Content $lockFile -Raw -Encoding UTF8).Trim()
+        if ($ownerPid -match '^\d+$' -and (Get-Process -Id $ownerPid -ErrorAction SilentlyContinue)) {
+            Write-Host "Refill уже выполняется (pid=$ownerPid). Выхожу."
+        } else {
+            $stale = $true
+        }
+    } catch { $stale = $true }
+    if (-not $stale) { exit 0 }
+    Remove-Item $lockFile -Force -ErrorAction SilentlyContinue
+}
+Set-Content -Path $lockFile -Value $PID -Encoding UTF8
+# Снимем lock при любом исходе (нормальный/ошибка/Ctrl-C).
+trap { Remove-Item $lockFile -Force -ErrorAction SilentlyContinue }
 
 function Write-Log($msg) {
     $line = "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] $msg"

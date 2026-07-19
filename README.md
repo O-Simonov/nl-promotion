@@ -1,6 +1,6 @@
-# NL AutoPost — автоматическая публикация в 4 соцсети
+# NL AutoPost — автоматическая публикация в 5 соцсетей
 
-Система автопостинга для дистрибьютора NL International. Публикует посты с картинками в Telegram, Facebook, Instagram и ВКонтакте по расписанию без ручного участия.
+Система автопостинга для дистрибьютора NL International. Публикует посты с картинками в Telegram, Facebook, Instagram, ВКонтакте и X (Twitter) по расписанию без ручного участия.
 
 > 📄 **Описание проекта** (что, зачем, для кого) — в **[PROJECT.md](PROJECT.md)**.
 >
@@ -16,7 +16,7 @@
 
 ## Что делает проект
 
-- **4 бота** публикуют посты ежедневно в Telegram (10:00), Facebook (11:00), Instagram (12:00), ВКонтакте (14:00)
+- **5 ботов** публикуют посты ежедневно в Telegram (10:00), Facebook (11:00), Instagram (12:00), ВКонтакте (14:00), X/Twitter (13:07)
 - **Генератор картинок** создаёт обложки для постов с иконками и цветами по категории
 - **Очередь и бэклог** — посты автоматически перекладываются из бэклога в очередь когда заканчиваются
 - **Сайт-хаб** на Netlify с каталогом продуктов и реферальными ссылками
@@ -51,11 +51,19 @@ NL_produkt/
 │   ├── Test-Bot-IG.ps1
 │   └── config.example.json     # Пример конфига
 │
-└── fb-bot/                     # Facebook-бот
-    ├── Post-Next-FB.ps1
-    ├── Setup-Schedule-FB.ps1   # Расписание (11:00)
-    ├── Test-Bot-FB.ps1
-    └── config.example.json     # Пример конфига
+├── fb-bot/                     # Facebook-бот
+│   ├── Post-Next-FB.ps1
+│   ├── Setup-Schedule-FB.ps1   # Расписание (11:00)
+│   ├── Test-Bot-FB.ps1
+│   └── config.example.json     # Пример конфига
+│
+└── x-bot/                      # X (Twitter)-бот — Playwright, логин/пароль
+    ├── Post-Next-X.ps1         # Оркестратор (берёт пост из очереди → зовёт воркер)
+    ├── post-x.mjs              # Node+Playwright воркер (логин, публикация твита)
+    ├── Test-Bot-X.ps1          # Проверка входа без публикации
+    ├── Setup-Schedule-X.ps1   # Расписание (13:07)
+    ├── config.example.json     # login/password/headless
+    └── README-X.md             # Установка Node+Playwright, первый вход
 ```
 
 ## Быстрый старт
@@ -79,6 +87,7 @@ cd nl-promotion
 | ВКонтакте | vk.com/dev → Управление → Ключи доступа |
 | Instagram | developers.facebook.com → Graph API Explorer |
 | Facebook | developers.facebook.com → Graph API Explorer |
+| X (Twitter) | Логин/пароль аккаунта (Playwright) — см. `x-bot/README-X.md` |
 
 ### 3. Создать расписание
 ```powershell
@@ -86,6 +95,7 @@ pwsh -File tg-bot\Setup-Schedule.ps1
 pwsh -File vk-bot\Setup-Schedule-VK.ps1
 pwsh -File ig-bot\Setup-Schedule-IG.ps1
 pwsh -File fb-bot\Setup-Schedule-FB.ps1
+pwsh -File x-bot\Setup-Schedule-X.ps1
 ```
 
 ### 4. Проверить подключение
@@ -94,6 +104,7 @@ pwsh -File tg-bot\Test-Bot.ps1
 pwsh -File vk-bot\Test-Bot-VK.ps1
 pwsh -File ig-bot\Test-Bot-IG.ps1
 pwsh -File fb-bot\Test-Bot-FB.ps1
+pwsh -File x-bot\Test-Bot-X.ps1
 ```
 
 ### 5. Проверить статус всех ботов
@@ -109,6 +120,7 @@ pwsh -File Check-All-Bots.ps1
 | 10:00 | Публикация в Telegram |
 | 11:00 | Публикация в Facebook |
 | 12:00 | Публикация в Instagram |
+| 13:07 | Публикация в X (Twitter) — через Playwright (см. `x-bot/README-X.md`) |
 | 14:00 | Публикация в ВКонтакте |
 
 ## Генерация картинок
@@ -134,3 +146,4 @@ pwsh -File tg-bot\Make-PostImage.ps1 `
 - Instagram: https://www.instagram.com/simonov3480/
 - ВКонтакте: https://vk.com/club239517960
 - Facebook: https://www.facebook.com/profile.php?id=1167094323156986
+- X (Twitter): https://x.com/olegsimnov

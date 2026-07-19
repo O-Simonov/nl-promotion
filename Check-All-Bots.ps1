@@ -36,6 +36,7 @@ Write-Host "=== Последние строки логов ===" -ForegroundColor
     "C:\NL_produkt\tg-bot\logs\post.log",
     "C:\NL_produkt\fb-bot\logs\fb-bot.log",
     "C:\NL_produkt\ig-bot\logs\ig-bot.log",
+    "C:\NL_produkt\x-bot\logs\x-bot.log",
     "C:\NL_produkt\tg-bot\logs\refill.log"
 ) | ForEach-Object {
     if (Test-Path $_) {

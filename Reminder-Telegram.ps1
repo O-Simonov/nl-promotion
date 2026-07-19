@@ -21,6 +21,7 @@ $bots = @(
   @{ name='FB'; log='fb-bot\logs\fb-bot.log'; okPat='УСПЕХ!|OK: опубликован'      ; badPat='СБОЙ|❌|ошибка' }
   @{ name='IG'; log='ig-bot\logs\ig-bot.log'; okPat='УСПЕХ!|Пост опубликован'     ; badPat='СБОЙ|❌|ошибка' }
   @{ name='VK'; log='vk-bot\logs\post.log';   okPat='OK: опубликован|Успех'        ; badPat='СБОЙ|❌|ошибка' }
+  @{ name='X';  log='x-bot\logs\x-bot.log';   okPat='УСПЕХ!|Твит опубликован'      ; badPat='СБОЙ|❌|нужен ручной вход' }
 )
 
 $lines = @()

@@ -3,6 +3,7 @@ tg-bot/config.json
 vk-bot/config.json
 ig-bot/config.json
 fb-bot/config.json
+x-bot/config.json
 
 # Временный файл при обновлении Meta-токена (никогда не коммитить!)
 meta-token.txt
@@ -19,7 +20,16 @@ ig-bot/logs/
 ig-bot/sent/
 fb-bot/logs/
 fb-bot/sent/
+x-bot/logs/
+x-bot/sent/
+x-bot/session.json
+x-bot/node_modules/
 promotion/logs/
+logs/
+
+# Прокси-учётки (никогда не коммитить)
+**/proxys_*.txt
+proxy.config.json
 
 # Локальные настройки Claude Code (не трогать skills/)
 .claude/settings.local.json
