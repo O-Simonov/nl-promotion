@@ -7,10 +7,19 @@
 
 ## 🔗 Твои реферальные ссылки (актуальные)
 
+Полный каталог категорий/курсов: **[NL_REF.md](NL_REF.md)** · JSON: `refs/nl-ref-aliases.json`
+
 | Что | Ссылка |
 |-----|--------|
-| 🛒 Магазин NL (покупка) | `https://nlstar.com/ref/WEWxBD/` |
-| 💼 Бизнес-страница NL (регистрация партнёра) | `https://nlstore.com/ref/rhhBvA/` |
+| 🛒 Главная интернет-магазина | `https://nlstar.com/ref/aKEtBR/` |
+| 🧾 Регистрация клиентов в магазине | `https://nlstar.com/ref/WEWxBD/` |
+| 💼 Лендинг о бизнесе NL | `https://nlstore.com/ref/rhhBvA/` |
+| ✅ Регистрация новичка в 1 линию | `https://nlstar.com/ref/cbGX2G/` |
+| 🆕 Новинки | `https://nlstar.com/ref/Tzg1xP/` |
+| 🥤 Коктейли | `https://nlstore.com/ref/SeVRg5/` |
+| 💊 БАД | `https://nlstar.com/ref/9KWLuY/` |
+| 🧃 Напитки | `https://nlstar.com/ref/Vxjnnn/` |
+| 🎁 Сеты | `https://nlstar.com/ref/5yoxwQ/` |
 | 📱 Telegram-канал | `https://t.me/Simka1969_nl` |
 | 🌐 Сайт-хаб (все ссылки в одном месте) | `https://oleg-nl.netlify.app/` |
 | 👤 VK | `https://vk.com/osimonov69` |
