@@ -25,7 +25,6 @@
 | 👤 VK | `https://vk.com/osimonov69` |
 | 📺 YouTube | `https://youtube.com/@osimonov69` |
 | 🎵 TikTok | `https://tiktok.com/@olegsimonov115` |
-| 👵 OK | `https://ok.ru/profile/183026836958` |
 | 📘 Facebook | `https://www.facebook.com/profile.php?id=100001930710021` |
 
 ---
@@ -122,8 +121,6 @@
 - [ ] YouTube: описание канала (About), шапка канала
 - [ ] TikTok: bio
 - [ ] Facebook: раздел «О себе», закреплённый пост
-- [ ] OK: статус, пост в группе
-- [ ] MAX: «О себе»
 - [ ] Сайт-хаб `oleg-nl.netlify.app`: проверить, что все ссылки рабочие
 
 **Применение:** заходи в каждый профиль, вставляй соответствующий текст. На всё — 30–40 минут.
